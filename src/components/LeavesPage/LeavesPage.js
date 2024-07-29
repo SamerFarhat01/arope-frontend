@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import Axios from 'axios';
 import { Button } from '@mui/material';
@@ -32,11 +31,15 @@ const LeavesPage = () => {
             hour12: true,
             timeZone: 'Etc/GMT-3',
         };
-        const transactionsWithFormattedTimestamps = response.data.map(transaction => ({
-            ...transaction,
-            dates: transaction.dates || "No Dates",
-            lastModified: new Date(transaction.lastModified).toLocaleString('en-US', options)
-        }));
+        const transactionsWithFormattedTimestamps = response.data.map(transaction => {
+            const formattedTransaction = {
+                ...transaction,
+                dates: transaction.dates || "No Dates",
+                lastModified: new Date(transaction.lastModified).toLocaleString('en-US', options)
+            };
+            console.log(`Transaction ID ${transaction.id}: Time values - ${transaction.time}`);
+            return formattedTransaction;
+        });
         setLeaveTransactions(transactionsWithFormattedTimestamps);
     };
 
@@ -72,6 +75,7 @@ const LeavesPage = () => {
         { field: 'requestStatus', headerName: 'Request Status', width: 200 },
         { field: 'quantity', headerName: 'Quantity', width: 150 },
         { field: 'dates', headerName: 'Dates', width: 250 },
+        { field: 'time', headerName: 'Time', width: 200 },
         { field: 'lastModified', headerName: 'Last Modified', width: 250 }
     ];
 
@@ -85,7 +89,7 @@ const LeavesPage = () => {
                 </div>
                 <div style={{ display: "flex", flexDirection: "column" }}>
                     <Button style={{ marginBottom: "5px" }} variant="contained" color="success" size="small" onClick={() => handleOpenModal('Add')}>Add Days</Button>
-                    <Button variant="contained" color="error" size="small" onClick={() => handleOpenModal('Remove')}>Remove Days</Button>
+                    <Button style={{ marginBottom: "5px" }} variant="contained" color="error" size="small" onClick={() => handleOpenModal('Remove')}>Remove Days</Button>
                     <Button variant="contained" color="primary" size="small" onClick={handleOpenSummaryModal}>Leave Summary</Button>
                 </div>
             </div>
@@ -112,8 +116,3 @@ const LeavesPage = () => {
 };
 
 export default LeavesPage;
-
-
-
-
-

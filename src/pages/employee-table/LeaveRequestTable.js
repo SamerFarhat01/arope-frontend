@@ -42,6 +42,7 @@ const LeaveRequestsTable = ({ token, userId, employees, departments }) => {
                 console.error('Error fetching leave requests:', error);
             }
         };
+        console.log("formatted: "+leaveRequests)
 
         const fetchEmployee = async () => {
             try {

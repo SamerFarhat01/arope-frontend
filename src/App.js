@@ -13,10 +13,11 @@ import Departments from './components/Departments/Departments';
 import Logs from './components/Logs/Logs';
 import LeavesPage from './components/LeavesPage/LeavesPage';
 import ManagerLeaveRequests from './components/ManagerLeaveRequests/ManagerLeaveRequests';
-import VacationForm from './components/VacationForm/VacationForm';
-
+import HolidayForm from './components/HolidayForm/HolidayForm';
 import {jwtDecode} from 'jwt-decode';
 import HRSharedCalendar from './components/HRSharedCalendar/HRSharedCalendar';
+import LeaveSummaryPage from './components/LeaveSummaryPage/LeaveSummaryPage';
+
 
 function App() {
     const [employees, setEmployees] = useState([]);
@@ -186,8 +187,8 @@ function App() {
                                 element={<Logs token={token} />}
                             />
                             <Route
-                                path="/vacationform"
-                                element={<VacationForm token={token} />}
+                                path="/holiday-form"
+                                element={<HolidayForm token={token} />} 
                             />
                             <Route
                                 path="/employee/:id/leaves"
@@ -202,6 +203,10 @@ function App() {
                                 path="/shared-calendar"
                                 element={<HRSharedCalendar token={token} />}
                                 
+                            />
+                            <Route
+                                path="/leave-summary"
+                                element={<LeaveSummaryPage employeeId={userId} />} // New Route
                             />
                         </>
                     )}

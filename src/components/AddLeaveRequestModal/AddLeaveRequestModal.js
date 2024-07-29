@@ -76,12 +76,30 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
     }, [editingRequest]);
 
     const handleDurationChange = (date, duration) => {
+        const formattedDate = moment(date).format('YYYY-MM-DD');
+        if (
+            getUnavailableActions(formattedDate).includes('NONE') ||
+            (getUnavailableActions(formattedDate).includes('HD-PM') && duration === '1') ||
+            (getUnavailableActions(formattedDate).includes('HD-AM') && duration === '1')
+        ) {
+            alert("Action Not Allowed");
+            return;
+        }
         setLeaveDetails(leaveDetails.map(detail =>
             detail.date === date ? { ...detail, duration } : detail
         ));
     };
 
     const handleTimeChange = (date, time) => {
+        const formattedDate = moment(date).format('YYYY-MM-DD');
+        if (
+            getUnavailableActions(formattedDate).includes('NONE') ||
+            (getUnavailableActions(formattedDate).includes('HD-PM') && time === 'PM') ||
+            (getUnavailableActions(formattedDate).includes('HD-AM') && time === 'AM')
+        ) {
+            alert("Action Not Allowed");
+            return;
+        }
         setLeaveDetails(leaveDetails.map(detail =>
             detail.date === date ? { ...detail, time } : detail
         ));
@@ -172,6 +190,32 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
         return UDs.map(ud => ud.action).join(' ');
     };
 
+    const isDisabled = (date) => {
+        const formattedDate = moment(date.toDate()).format('YYYY-MM-DD');
+        return unavailableDates.some(ud => ud.date.split("T")[0] === formattedDate && ud.action === 'NONE');
+    };
+
+    const getUnavailableActions = (date) => {
+        const UDs = unavailableDates.filter(ud => ud.date.split("T")[0] === date);
+        return UDs.map(ud => ud.action);
+    };
+
+    const getDayOptions = (formattedDate) => {
+        const ud = unavailableDates.find(ud => ud.date.split("T")[0] === formattedDate);
+        if (!ud) return { disableFullDay: false, disableHalfDay: false, disableAM: false, disablePM: false };
+        
+        switch (ud.action) {
+            case 'NONE':
+                return { disableFullDay: true, disableHalfDay: true, disableAM: true, disablePM: true };
+            case 'HD-AM':
+                return { disableFullDay: true, disableHalfDay: false, disableAM: true, disablePM: false };
+            case 'HD-PM':
+                return { disableFullDay: true, disableHalfDay: false, disableAM: false, disablePM: true };
+            default:
+                return { disableFullDay: false, disableHalfDay: false, disableAM: false, disablePM: false };
+        }
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -218,41 +262,54 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
                             }}
                         />
                     </div>
-                    {leaveDetails.map((detail, index) => (
-                        <div key={`${detail.date}-${index}`} className="form-group">
-                            {typeOfLeave === 'Personal Time Off' ? (
-                                <>
-                                    <div className="form-group">
-                                        <label>{detail.date} Start Time:</label>
-                                        <input type="time" value={detail.start_time} onChange={(e) => handleStartTimeChange(detail.date, e.target.value)} required />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>{detail.date} End Time:</label>
-                                        <input type="time" value={detail.end_time} onChange={(e) => handleEndTimeChange(detail.date, e.target.value)} required />
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <label>{detail.date} Duration:</label>
-                                    <select value={detail.duration} onChange={(e) => handleDurationChange(detail.date, e.target.value)} required>
-                                        <option value="">Select Type</option>
-                                        <option value="1">Full Day</option>
-                                        <option value="0.5">Half Day</option>
-                                    </select>
-                                    {detail.duration === '0.5' && (
+                    {leaveDetails.map((detail, index) => {
+                        const dayOptions = getDayOptions(detail.date);
+                        return (
+                            <div key={`${detail.date}-${index}`} className="form-group">
+                                {typeOfLeave === 'Personal Time Off' ? (
+                                    <>
                                         <div className="form-group">
-                                            <label>{detail.date} Time:</label>
-                                            <select value={detail.time} onChange={(e) => handleTimeChange(detail.date, e.target.value)} required>
-                                                <option value="">Select Time</option>
-                                                <option value="AM">Morning</option>
-                                                <option value="PM">Afternoon</option>
-                                            </select>
+                                            <label>{detail.date} Start Time:</label>
+                                            <input type="time" value={detail.start_time} onChange={(e) => handleStartTimeChange(detail.date, e.target.value)} required={detail.duration !== '1'} disabled={detail.duration === '1'} />
                                         </div>
-                                    )}
-                                </>
-                            )}
-                        </div>
-                    ))}
+                                        <div className="form-group">
+                                            <label>{detail.date} End Time:</label>
+                                            <input type="time" value={detail.end_time} onChange={(e) => handleEndTimeChange(detail.date, e.target.value)} required={detail.duration !== '1'} disabled={detail.duration === '1'} />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <label>{detail.date} Duration:</label>
+                                        <select 
+                                            value={detail.duration} 
+                                            onChange={(e) => handleDurationChange(detail.date, e.target.value)} 
+                                            required 
+                                            disabled={dayOptions.disableFullDay && dayOptions.disableHalfDay}
+                                        >
+                                            <option value="">Select Type</option>
+                                            <option value="1" disabled={dayOptions.disableFullDay}>Full Day</option>
+                                            <option value="0.5" disabled={dayOptions.disableHalfDay}>Half Day</option>
+                                        </select>
+                                        {detail.duration === '0.5' && (
+                                            <div className="form-group">
+                                                <label>{detail.date} Time:</label>
+                                                <select 
+                                                    value={detail.time} 
+                                                    onChange={(e) => handleTimeChange(detail.date, e.target.value)} 
+                                                    required
+                                                    disabled={dayOptions.disableAM && dayOptions.disablePM}
+                                                >
+                                                    <option value="">Select Time</option>
+                                                    <option value="AM" disabled={dayOptions.disableAM}>Morning</option>
+                                                    <option value="PM" disabled={dayOptions.disablePM}>Afternoon</option>
+                                                </select>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        );
+                    })}
                     <button type="submit" className="submit-button">Add Leave Request</button>
                 </form>
             </div>
@@ -261,9 +318,6 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
 };
 
 export default AddLeaveRequestModal;
-
-
-
 
 
 
@@ -284,6 +338,8 @@ export default AddLeaveRequestModal;
 //     const [selectedDates, setSelectedDates] = useState([]);
 //     const [unavailableDates, setUnavailableDates] = useState([]);
 //     const [previousSickLeaveDays, setPreviousSickLeaveDays] = useState(0);
+//     const [remainingTimeOffMinutes, setRemainingTimeOffMinutes] = useState(120); // Initialize with max limit
+//     const [remainingSickDays, setRemainingSickDays] = useState(2); // Initialize with max limit
 
 //     useEffect(() => {
 //         const getUnavailableDates = async () => {
@@ -304,7 +360,7 @@ export default AddLeaveRequestModal;
 //         const updatedLeaveDetails = selectedDates.map(date => {
 //             const formattedDate = moment(date.toDate()).format('YYYY-MM-DD');
 //             const existing = leaveDetails.find(detail => detail.date === formattedDate);
-//             return existing ? existing : { date: formattedDate, duration: '', time: '' };
+//             return existing ? existing : { date: formattedDate, duration: '', time: '', start_time: '', end_time: '' };
 //         });
 //         setLeaveDetails(updatedLeaveDetails);
 //     }, [selectedDates]);
@@ -315,14 +371,25 @@ export default AddLeaveRequestModal;
 //                 const response = await Axios.get(`http://localhost:5000/previous-sick-leave-days/${employeeId}`, {
 //                     headers: { Authorization: `Bearer ${token}` }
 //                 });
-//                 console.log(response.data.total)
 //                 setPreviousSickLeaveDays(parseFloat(response.data.total) || 0);
 //             } catch (error) {
 //                 console.error('Error fetching previous sick leave days:', error);
 //             }
 //         };
 
+//         const getRemainingTimeOff = async () => {
+//             try {
+//                 const response = await Axios.get(`http://localhost:5000/remaining-timeoff/${employeeId}`, {
+//                     headers: { Authorization: `Bearer ${token}` }
+//                 });
+//                 setRemainingTimeOffMinutes(response.data.remainingMinutes);
+//             } catch (error) {
+//                 console.error('Error fetching remaining time off:', error);
+//             }
+//         };
+
 //         getPreviousSickLeaveDays();
+//         getRemainingTimeOff();
 //     }, [employeeId, token]);
 
 //     useEffect(() => {
@@ -335,13 +402,25 @@ export default AddLeaveRequestModal;
 
 //     const handleDurationChange = (date, duration) => {
 //         setLeaveDetails(leaveDetails.map(detail =>
-//             detail.date === date ? { ...detail, duration } : detail
+//             detail.date === date ? { ...detail, duration, time: duration === '1' ? '' : detail.time, start_time: duration === '1' ? '' : detail.start_time, end_time: duration === '1' ? '' : detail.end_time } : detail
 //         ));
 //     };
 
 //     const handleTimeChange = (date, time) => {
 //         setLeaveDetails(leaveDetails.map(detail =>
 //             detail.date === date ? { ...detail, time } : detail
+//         ));
+//     };
+
+//     const handleStartTimeChange = (date, start_time) => {
+//         setLeaveDetails(leaveDetails.map(detail =>
+//             detail.date === date ? { ...detail, start_time } : detail
+//         ));
+//     };
+
+//     const handleEndTimeChange = (date, end_time) => {
+//         setLeaveDetails(leaveDetails.map(detail =>
+//             detail.date === date ? { ...detail, end_time } : detail
 //         ));
 //     };
 
@@ -358,6 +437,20 @@ export default AddLeaveRequestModal;
 //         if (typeOfLeave === 'Sick Leave Without Note' && totalRequested > 2) {
 //             alert('The total days allowed for sick leaves without a note has been exceeded, please change request type');
 //             return;
+//         }
+
+//         if (typeOfLeave === 'Personal Time Off') {
+//             const totalMinutesRequested = leaveDetails.reduce((total, detail) => {
+//                 const startTime = moment(detail.start_time, 'HH:mm');
+//                 const endTime = moment(detail.end_time, 'HH:mm');
+//                 const duration = endTime.diff(startTime, 'minutes');
+//                 return total + duration;
+//             }, 0);
+
+//             if (totalMinutesRequested > remainingTimeOffMinutes) {
+//                 alert('The total hours allowed for this month exceeded, please change request type');
+//                 return;
+//             }
 //         }
 
 //         const req = {
@@ -404,6 +497,27 @@ export default AddLeaveRequestModal;
 //         return UDs.map(ud => ud.action).join(' ');
 //     };
 
+//     const isDisabled = (date) => {
+//         const formattedDate = moment(date.toDate()).format('YYYY-MM-DD');
+//         return unavailableDates.some(ud => ud.date.split("T")[0] === formattedDate && ud.action === 'NONE');
+//     };
+
+//     const getDayOptions = (formattedDate) => {
+//         const ud = unavailableDates.find(ud => ud.date.split("T")[0] === formattedDate);
+//         if (!ud) return { disableFullDay: false, disableHalfDay: false, disableAM: false, disablePM: false };
+        
+//         switch (ud.action) {
+//             case 'NONE':
+//                 return { disableFullDay: true, disableHalfDay: true, disableAM: true, disablePM: true };
+//             case 'HD-AM':
+//                 return { disableFullDay: true, disableHalfDay: false, disableAM: true, disablePM: false };
+//             case 'HD-PM':
+//                 return { disableFullDay: true, disableHalfDay: false, disableAM: false, disablePM: true };
+//             default:
+//                 return { disableFullDay: false, disableHalfDay: false, disableAM: false, disablePM: false };
+//         }
+//     };
+
 //     if (!isOpen) return null;
 
 //     return (
@@ -427,6 +541,8 @@ export default AddLeaveRequestModal;
 //                             <option value="Personal Time Off">Personal Time Off</option>
 //                         </select>
 //                     </div>
+//                     <p>Remaining Personal Time Off (minutes): {remainingTimeOffMinutes}</p>
+//                     <p>Remaining Sick Leave Without Note (days): {2 - previousSickLeaveDays}</p>
 //                     <div className="form-group">
 //                         <label>Dates:</label>
 //                         <Calendar
@@ -448,26 +564,54 @@ export default AddLeaveRequestModal;
 //                             }}
 //                         />
 //                     </div>
-//                     {leaveDetails.map((detail, index) => (
-//                         <div key={`${detail.date}-${index}`} className="form-group">
-//                             <label>{detail.date} Duration:</label>
-//                             <select value={detail.duration} onChange={(e) => handleDurationChange(detail.date, e.target.value)} required>
-//                                 <option value="">Select Type</option>
-//                                 <option value="1">Full Day</option>
-//                                 <option value="0.5">Half Day</option>
-//                             </select>
-//                             {detail.duration === '0.5' && (
-//                                 <div className="form-group">
-//                                     <label>{detail.date} Time:</label>
-//                                     <select value={detail.time} onChange={(e) => handleTimeChange(detail.date, e.target.value)} required>
-//                                         <option value="">Select Time</option>
-//                                         <option value="AM">Morning</option>
-//                                         <option value="PM">Afternoon</option>
-//                                     </select>
-//                                 </div>
-//                             )}
-//                         </div>
-//                     ))}
+//                     {leaveDetails.map((detail, index) => {
+//                         const dayOptions = getDayOptions(detail.date);
+//                         return (
+//                             <div key={`${detail.date}-${index}`} className="form-group">
+//                                 {typeOfLeave === 'Personal Time Off' ? (
+//                                     <>
+//                                         <div className="form-group">
+//                                             <label>{detail.date} Start Time:</label>
+//                                             <input type="time" value={detail.start_time} onChange={(e) => handleStartTimeChange(detail.date, e.target.value)} required={detail.duration !== '1'} disabled={detail.duration === '1'} />
+//                                         </div>
+//                                         <div className="form-group">
+//                                             <label>{detail.date} End Time:</label>
+//                                             <input type="time" value={detail.end_time} onChange={(e) => handleEndTimeChange(detail.date, e.target.value)} required={detail.duration !== '1'} disabled={detail.duration === '1'} />
+//                                         </div>
+//                                     </>
+//                                 ) : (
+//                                     <>
+//                                         <label>{detail.date} Duration:</label>
+//                                         <select 
+//                                             value={detail.duration} 
+//                                             onChange={(e) => handleDurationChange(detail.date, e.target.value)} 
+//                                             required 
+//                                             disabled={dayOptions.disableFullDay && dayOptions.disableHalfDay}
+//                                         >
+//                                             <option value="">Select Type</option>
+//                                             <option value="1" disabled={dayOptions.disableFullDay}>Full Day</option>
+//                                             <option value="0.5" disabled={dayOptions.disableHalfDay}>Half Day</option>
+//                                         </select>
+//                                         {detail.duration === '0.5' && (
+//                                             <div className="form-group">
+//                                                 <label>{detail.date} Time:</label>
+//                                                 <select 
+//                                                     value={detail.time} 
+//                                                     onChange={(e) => handleTimeChange(detail.date, e.target.value)} 
+//                                                     required
+//                                                     disabled={dayOptions.disableAM && dayOptions.disablePM}
+//                                                 >
+//                                                     <option value="">Select Time</option>
+//                                                     <option value="AM" disabled={dayOptions.disableAM}>Morning</option>
+//                                                     <option value="PM" disabled={dayOptions.disablePM}>Afternoon</option>
+//                                                 </select>
+//                                             </div>
+//                                         )}
+//                                     </>
+//                                 )}
+//                             </div>
+//                         );
+//                     })}
 //                     <button type="submit" className="submit-button">Add Leave Request</button>
 //                 </form>
 //             </div>
@@ -476,4 +620,5 @@ export default AddLeaveRequestModal;
 // };
 
 // export default AddLeaveRequestModal;
+
 

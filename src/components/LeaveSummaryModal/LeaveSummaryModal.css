@@ -56,3 +56,11 @@
 .sick-leave {
     color: blue;
 }
+
+.leave-summary-table .pto-leave {
+    color: green; /* or any color you prefer */
+}
+
+.employee-info .pto-leave {
+    color: green; /* or any color you prefer */
+}
