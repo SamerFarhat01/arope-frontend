@@ -50,11 +50,16 @@ const BlankPage = ({ isHr, isManager, isEmployee }) => {
                         <MenuItem onClick={() => handleNavigate('/staff')}>Staff</MenuItem>
                         <MenuItem onClick={() => handleNavigate('/logs')}>Logs</MenuItem>
                         <MenuItem onClick={() => handleNavigate('/holiday-form')}>Holiday Form</MenuItem>
-                        <MenuItem onClick={() => handleNavigate('/shared-calendar')}>Shared Calendar</MenuItem> 
+                        <MenuItem onClick={() => handleNavigate('/shared-calendar')}>Shared Calendar</MenuItem>
+                        <MenuItem onClick={() => handleNavigate('/leave-requests')}>Leave Requests</MenuItem> 
                     </>
                 )}
                 {isManager && (
-                    <MenuItem onClick={() => handleNavigate('/manager-leave-requests')}>Manager Leave Requests</MenuItem>
+                    <>
+                        <MenuItem onClick={() => handleNavigate('/manager-leave-requests')}>Manager Leave Requests</MenuItem>
+                        <MenuItem onClick={() => handleNavigate('/leave-requests')}>Leave Requests</MenuItem>
+                    </>
+                    
                 )}
                 {isEmployee && !isHr && !isManager && (
                     <>

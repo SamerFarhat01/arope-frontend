@@ -12,9 +12,11 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
     const [leaveDetails, setLeaveDetails] = useState([]);
     const [selectedDates, setSelectedDates] = useState([]);
     const [unavailableDates, setUnavailableDates] = useState([]);
+    const [holidayDates, setHolidayDates] = useState([]);
     const [previousSickLeaveDays, setPreviousSickLeaveDays] = useState(0);
-    const [remainingTimeOffMinutes, setRemainingTimeOffMinutes] = useState(120); // Initialize with max limit
-    const [remainingSickDays, setRemainingSickDays] = useState(2); // Initialize with max limit
+    const [remainingTimeOffMinutes, setRemainingTimeOffMinutes] = useState(120); 
+    const [remainingBalance, setRemainingBalance] = useState(0);
+    const [previousUnpaidLeaveDays, setPreviousUnpaidLeaveDays] = useState(0);
 
     useEffect(() => {
         const getUnavailableDates = async () => {
@@ -22,13 +24,30 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
                 const response = await Axios.get(`http://localhost:5000/unavailable-dates/${employeeId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
+                console.log('Unavailable Dates:', response.data);
                 setUnavailableDates(response.data);
             } catch (error) {
                 console.error('Error fetching unavailable dates:', error);
             }
         };
 
+        const getHolidays = async () => {
+            try {
+                const response = await Axios.get(`http://localhost:5000/holidays`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                console.log('Holiday Dates:', response.data);
+                setHolidayDates(response.data.map(holiday => ({
+                    start: moment(holiday.start_date).format('YYYY-MM-DD'),
+                    end: moment(holiday.end_date).format('YYYY-MM-DD')
+                })));
+            } catch (error) {
+                console.error('Error fetching holidays:', error);
+            }
+        };
+
         getUnavailableDates();
+        getHolidays();
     }, [employeeId, token]);
 
     useEffect(() => {
@@ -63,9 +82,34 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
             }
         };
 
+        const getRemainingBalance = async () => {
+            try {
+                const response = await Axios.get(`http://localhost:5000/employee/${employeeId}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setRemainingBalance(response.data.days);
+            } catch (error) {
+                console.error('Error fetching remaining balance:', error);
+            }
+        };
+
+        const getPreviousUnpaidLeaveDays = async () => {
+            try {
+                const response = await Axios.get(`http://localhost:5000/previous-unpaid-leave-days/${employeeId}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setPreviousUnpaidLeaveDays(parseFloat(response.data.total) || 0);
+            } catch (error) {
+                console.error('Error fetching previous unpaid leave days:', error);
+            }
+        };
+
         getPreviousSickLeaveDays();
         getRemainingTimeOff();
+        getRemainingBalance();
+        getPreviousUnpaidLeaveDays();
     }, [employeeId, token]);
+
 
     useEffect(() => {
         if (editingRequest) {
@@ -125,10 +169,16 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
             return !isNaN(duration) ? total + duration : total;
         }, 0);
 
-        const totalRequested = parseFloat(previousSickLeaveDays) + quantity;
+        const totalRequestedSick = parseFloat(previousSickLeaveDays) + quantity;
+        const totalRequestedUnpaid = parseFloat(previousUnpaidLeaveDays) + quantity;
 
-        if (typeOfLeave === 'Sick Leave Without Note' && totalRequested > 2) {
+        if (typeOfLeave === 'Sick Leave Without Note' && totalRequestedSick > 2) {
             alert('The total days allowed for sick leaves without a note has been exceeded, please change request type');
+            return;
+        }
+
+        if (typeOfLeave === 'Unpaid Leave' && totalRequestedUnpaid > 5) {
+            alert('The total days allowed for unpaid leave has been exceeded, please change request type');
             return;
         }
 
@@ -145,6 +195,7 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
                 return;
             }
         }
+        
 
         const req = {
             employeeId,
@@ -185,6 +236,11 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
         return day === 6 || day === 0; // 6 is Saturday, 0 is Sunday
     };
 
+    const isHoliday = (date) => {
+        const formattedDate = moment(date.toDate()).format('YYYY-MM-DD');
+        return holidayDates.some(holiday => formattedDate >= holiday.start && formattedDate <= holiday.end);
+    };
+
     const getExistingLeaveClass = (date) => {
         var UDs = unavailableDates.filter(ud => ud.date.split("T")[0] === moment(date.toDate()).format('YYYY-MM-DD'));
         return UDs.map(ud => ud.action).join(' ');
@@ -192,7 +248,7 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
 
     const isDisabled = (date) => {
         const formattedDate = moment(date.toDate()).format('YYYY-MM-DD');
-        return unavailableDates.some(ud => ud.date.split("T")[0] === formattedDate && ud.action === 'NONE');
+        return isWeekend(date) || isHoliday(date);
     };
 
     const getUnavailableActions = (date) => {
@@ -216,6 +272,15 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
         }
     };
 
+    const handleTypeOfLeaveChange = (e) => {
+        const selectedType = e.target.value;
+        if (selectedType === 'Unpaid Leave' && remainingBalance > 0) {
+            alert('You can only request unpaid leave if your balance is zero.');
+            return;
+        }
+        setTypeOfLeave(selectedType);
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -230,7 +295,7 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
                     </div>
                     <div className="form-group">
                         <label>Type of Leave:</label>
-                        <select value={typeOfLeave} onChange={(e) => setTypeOfLeave(e.target.value)} required>
+                        <select value={typeOfLeave} onChange={handleTypeOfLeaveChange} required>
                             <option value="">Select Type</option>
                             <option value="Annual Paid Leave">Annual Paid Leave</option>
                             <option value="Sick Leave With Note">Sick Leave With Note</option>
@@ -241,6 +306,9 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
                     </div>
                     <p>Remaining Personal Time Off (minutes): {remainingTimeOffMinutes}</p>
                     <p>Remaining Sick Leave Without Note (days): {2 - previousSickLeaveDays}</p>
+                    {remainingBalance == 0.0 && (
+                        <p>Remaining Unpaid Leaves (days): {5 - previousUnpaidLeaveDays}</p>
+                    )}
                     <div className="form-group">
                         <label>Dates:</label>
                         <Calendar
@@ -253,10 +321,9 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
                             arrowRight="→"
                             mapDays={({ date }) => {
                                 const formattedDate = moment(date.toDate()).format('YYYY-MM-DD');
-                                const isDisabled = isWeekend(date) || unavailableDates.includes(formattedDate);
                                 const className = `${getDayClass(date)} ${getExistingLeaveClass(date)}`;
                                 return {
-                                    disabled: isDisabled,
+                                    disabled: isDisabled(date),
                                     className: className
                                 };
                             }}
@@ -339,7 +406,7 @@ export default AddLeaveRequestModal;
 //     const [unavailableDates, setUnavailableDates] = useState([]);
 //     const [previousSickLeaveDays, setPreviousSickLeaveDays] = useState(0);
 //     const [remainingTimeOffMinutes, setRemainingTimeOffMinutes] = useState(120); // Initialize with max limit
-//     const [remainingSickDays, setRemainingSickDays] = useState(2); // Initialize with max limit
+    
 
 //     useEffect(() => {
 //         const getUnavailableDates = async () => {
@@ -355,6 +422,7 @@ export default AddLeaveRequestModal;
 
 //         getUnavailableDates();
 //     }, [employeeId, token]);
+//     console.log(unavailableDates)
 
 //     useEffect(() => {
 //         const updatedLeaveDetails = selectedDates.map(date => {
@@ -401,12 +469,30 @@ export default AddLeaveRequestModal;
 //     }, [editingRequest]);
 
 //     const handleDurationChange = (date, duration) => {
+//         const formattedDate = moment(date).format('YYYY-MM-DD');
+//         if (
+//             getUnavailableActions(formattedDate).includes('NONE') ||
+//             (getUnavailableActions(formattedDate).includes('HD-PM') && duration === '1') ||
+//             (getUnavailableActions(formattedDate).includes('HD-AM') && duration === '1')
+//         ) {
+//             alert("Action Not Allowed");
+//             return;
+//         }
 //         setLeaveDetails(leaveDetails.map(detail =>
-//             detail.date === date ? { ...detail, duration, time: duration === '1' ? '' : detail.time, start_time: duration === '1' ? '' : detail.start_time, end_time: duration === '1' ? '' : detail.end_time } : detail
+//             detail.date === date ? { ...detail, duration } : detail
 //         ));
 //     };
 
 //     const handleTimeChange = (date, time) => {
+//         const formattedDate = moment(date).format('YYYY-MM-DD');
+//         if (
+//             getUnavailableActions(formattedDate).includes('NONE') ||
+//             (getUnavailableActions(formattedDate).includes('HD-PM') && time === 'PM') ||
+//             (getUnavailableActions(formattedDate).includes('HD-AM') && time === 'AM')
+//         ) {
+//             alert("Action Not Allowed");
+//             return;
+//         }
 //         setLeaveDetails(leaveDetails.map(detail =>
 //             detail.date === date ? { ...detail, time } : detail
 //         ));
@@ -500,6 +586,11 @@ export default AddLeaveRequestModal;
 //     const isDisabled = (date) => {
 //         const formattedDate = moment(date.toDate()).format('YYYY-MM-DD');
 //         return unavailableDates.some(ud => ud.date.split("T")[0] === formattedDate && ud.action === 'NONE');
+//     };
+
+//     const getUnavailableActions = (date) => {
+//         const UDs = unavailableDates.filter(ud => ud.date.split("T")[0] === date);
+//         return UDs.map(ud => ud.action);
 //     };
 
 //     const getDayOptions = (formattedDate) => {
@@ -620,5 +711,7 @@ export default AddLeaveRequestModal;
 // };
 
 // export default AddLeaveRequestModal;
+
+
 
 
