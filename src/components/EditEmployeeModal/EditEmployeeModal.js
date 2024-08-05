@@ -3,6 +3,7 @@ import Axios from 'axios';
 import './EditEmployeeModal.css';
 
 const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, departments, isManager }) => {
+    const [initialEmployeeData, setInitialEmployeeData] = useState({});
     const [firstName, setFirstName] = useState('');
     const [middleName, setMiddleName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -44,13 +45,24 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
 
     useEffect(() => {
         if (employee) {
-            setFirstName(employee.first_name);
-            setMiddleName(employee.middle_name);
-            setLastName(employee.last_name);
-            setEmail(employee.email);
-            setDepartmentName(employee.department_name);
-            setManagerName(employee.manager_first_name ? `${employee.manager_first_name} ${employee.manager_last_name}` : "None");
-            setDepartmentId(departments.filter(d => d.name === employee.department_name)[0]?.id);
+            const initialData = {
+                firstName: employee.first_name,
+                middleName: employee.middle_name,
+                lastName: employee.last_name,
+                email: employee.email,
+                departmentName: employee.department_name,
+                departmentId: departments.filter(d => d.name === employee.department_name)[0]?.id,
+                managerName: employee.manager_first_name ? `${employee.manager_first_name} ${employee.manager_last_name}` : "None",
+                managerId: [],
+            };
+
+            setInitialEmployeeData(initialData);
+            setFirstName(initialData.firstName);
+            setMiddleName(initialData.middleName);
+            setLastName(initialData.lastName);
+            setEmail(initialData.email);
+            setDepartmentName(initialData.departmentName);
+            setDepartmentId(initialData.departmentId);
             setDepartment(departments.filter(d => d.name === employee.department_name)[0]);
         }
     }, [employee, departments]);
@@ -85,12 +97,23 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
         }
     };
 
+    const handleClose = () => {
+        setFirstName(initialEmployeeData.firstName);
+        setMiddleName(initialEmployeeData.middleName);
+        setLastName(initialEmployeeData.lastName);
+        setEmail(initialEmployeeData.email);
+        setDepartmentName(initialEmployeeData.departmentName);
+        setDepartmentId(initialEmployeeData.departmentId);
+        setManagerName(initialEmployeeData.managerName);
+        onClose();
+    };
+
     if (!isOpen) return null;
 
     return (
         <div className="modal-overlay">
             <div className="modal">
-                <button className="close-button" onClick={onClose}>X</button>
+                <button className="close-button" onClick={handleClose}>X</button>
                 <h2>Edit Employee</h2>
                 <form onSubmit={handleSubmit}>
                     <div>
@@ -138,3 +161,4 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
 };
 
 export default EditEmployeeModal;
+

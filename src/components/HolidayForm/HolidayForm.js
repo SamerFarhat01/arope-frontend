@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Axios from 'axios';
-import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Modal, TextField } from '@mui/material';
+import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Modal, TextField, Typography, Box, IconButton } from '@mui/material';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import './HolidayForm.css';
 import { format } from 'date-fns';
+import CloseIcon from '@mui/icons-material/Close';
+import './HolidayForm.css';
 
 const HolidayForm = ({ token }) => {
     const [startDate, setStartDate] = useState(null);
@@ -14,6 +15,8 @@ const HolidayForm = ({ token }) => {
     const [holidays, setHolidays] = useState([]);
     const [editHolidayId, setEditHolidayId] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
+    const [addMode, setAddMode] = useState(false);
+    const [editMode, setEditMode] = useState(false);
 
     useEffect(() => {
         fetchHolidays();
@@ -41,11 +44,11 @@ const HolidayForm = ({ token }) => {
 
         try {
             let response;
-            if (editHolidayId) {
-                response = await Axios.patch(`http://localhost:5000/holidays/${editHolidayId}`, holidayData, {
+            if (editMode && description) {
+                response = await Axios.patch(`http://localhost:5000/holidays/${description}`, holidayData, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-            } else {
+            } else if (addMode) {
                 response = await Axios.post('http://localhost:5000/holiday', holidayData, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
@@ -66,22 +69,32 @@ const HolidayForm = ({ token }) => {
         setDescription('');
         setEditHolidayId(null);
         setModalOpen(false);
+        setAddMode(false);
+        setEditMode(false);
     };
 
     const handleEdit = (holiday) => {
+        console.log('Holiday clicked:', holiday);
         setStartDate(new Date(holiday.start_date));
         setEndDate(new Date(holiday.end_date));
         setDescription(holiday.description);
-        setEditHolidayId(holiday.id);
+        console.log('Set description to:', holiday.description);
+        setEditMode(true);
         setModalOpen(true);
+        setMessage(''); // Clear message when editing
     };
 
-    const handleDateClick = (holiday) => {
-        handleEdit(holiday);
+    const handleAdd = () => {
+        setAddMode(true);
+        setModalOpen(true);
+        setMessage(''); // Clear message when adding
     };
 
-    const openModal = () => setModalOpen(true);
     const closeModal = () => resetForm();
+
+    useEffect(() => {
+        console.log('Modal title - editMode:', editMode, 'addMode:', addMode);
+    }, [editMode, addMode]);
 
     return (
         <div className="holiday-form">
@@ -89,12 +102,12 @@ const HolidayForm = ({ token }) => {
             <Button
                 variant="contained"
                 color="primary"
-                onClick={openModal}
+                onClick={handleAdd}
                 style={{ marginBottom: '20px', float: 'right' }}
             >
                 Add Holiday
             </Button>
-            <TableContainer component={Paper}>
+            <TableContainer component={Paper} className="table-container">
                 <Table>
                     <TableHead>
                         <TableRow>
@@ -106,7 +119,7 @@ const HolidayForm = ({ token }) => {
                         {holidays.map((holiday) => (
                             <TableRow key={holiday.id}>
                                 <TableCell>{holiday.description}</TableCell>
-                                <TableCell onClick={() => handleDateClick(holiday)} style={{ cursor: 'pointer' }}>
+                                <TableCell onClick={() => handleEdit(holiday)} style={{ cursor: 'pointer' }}>
                                     {holiday.start_date === holiday.end_date
                                         ? format(new Date(holiday.start_date), 'dd-MM-yyyy')
                                         : `${format(new Date(holiday.start_date), 'dd-MM-yyyy')} >> ${format(new Date(holiday.end_date), 'dd-MM-yyyy')}`}
@@ -118,37 +131,43 @@ const HolidayForm = ({ token }) => {
             </TableContainer>
 
             <Modal open={modalOpen} onClose={closeModal}>
-                <Paper className="modal-content">
-                    <h2>{editHolidayId ? 'Edit Holiday' : 'Add Holiday'}</h2>
+                <Box className="modal-content">
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h6">{editMode ? 'Edit Holiday' : 'Add Holiday'}</Typography>
+                        <IconButton onClick={closeModal} className="close-button">
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
                     <form onSubmit={handleSubmit}>
-                        <div>
-                            <label>Start Date:</label>
-                            <DatePicker selected={startDate} onChange={(date) => setStartDate(date)} dateFormat="dd-MM-yyyy" required />
-                        </div>
-                        <div>
-                            <label>End Date:</label>
-                            <DatePicker selected={endDate} onChange={(date) => setEndDate(date)} dateFormat="dd-MM-yyyy" required />
-                        </div>
-                        <div>
+                        <Box mt={2}>
                             <TextField
                                 label="Description"
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
-                                required
+                                InputProps={{
+                                    readOnly: editMode,
+                                }}
                                 fullWidth
+                                required
                             />
-                        </div>
+                        </Box>
+                        <Box mt={2}>
+                            <label>Start Date:</label>
+                            <DatePicker selected={startDate} onChange={(date) => setStartDate(date)} dateFormat="dd-MM-yyyy" required />
+                        </Box>
+                        <Box mt={2}>
+                            <label>End Date:</label>
+                            <DatePicker selected={endDate} onChange={(date) => setEndDate(date)} dateFormat="dd-MM-yyyy" required />
+                        </Box>
                         <Button type="submit" variant="contained" color="primary" style={{ marginTop: '20px' }}>
-                            {editHolidayId ? 'Update Holiday' : 'Add Holiday'}
+                            {editMode ? 'Update Holiday' : 'Add Holiday'}
                         </Button>
                     </form>
-                    {message && <p>{message}</p>}
-                </Paper>
+                </Box>
             </Modal>
+            {message && <Typography mt={2} align="center">{message}</Typography>}
         </div>
     );
 };
 
 export default HolidayForm;
-
-

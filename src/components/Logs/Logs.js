@@ -12,7 +12,11 @@ const Logs = ({ token }) => {
                 const response = await Axios.get('http://localhost:5000/logs', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                setLogs(response.data.map(e => Object.assign(e, {"full_name": e.hr_user_first_name + " " + e.hr_user_last_name}, {"timestamp_edited": new Date(e.timestamp).toLocaleString("en-US", options)})));
+                setLogs(response.data.map(log => ({
+                    ...log,
+                    full_name: log.hr_user_name,
+                    timestamp_edited: new Date(log.timestamp).toLocaleString("en-US", options)
+                })));
             } catch (error) {
                 console.error('Error fetching logs:', error);
             }
@@ -30,7 +34,7 @@ const Logs = ({ token }) => {
         second: 'numeric',
         hour12: true,
         timeZone: 'Etc/GMT-3',
-      };
+    };
 
     return (
         <div className="logs-container">
