@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Axios from 'axios';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
@@ -27,10 +28,14 @@ const HRSharedCalendar = ({ token, onClose }) => {
                     const leaveDate = new Date(leave.leave_date);
                     let title = `${leave.employee_name} - ${leave.type_of_leave}`;
 
-                    if (leave.duration === 0.5) {
+                    if (leave.duration == 0.5) {
                         title += ` (${leave.time === 'AM' ? 'Morning' : 'Afternoon'})`;
-                    } else {
+                    } else if(leave.duration == 1){
                         title += ` (Full Day)`;
+                    }else{
+                        const startTime = moment(leave.start_time, 'HH:mm:ss').format('HH:mm');
+                        const endTime = moment(leave.end_time, 'HH:mm:ss').format('HH:mm');
+                        title += ` (${startTime} >> ${endTime})`;
                     }
 
                     return {
@@ -52,11 +57,10 @@ const HRSharedCalendar = ({ token, onClose }) => {
 
         fetchAllLeaves();
     }, [token]);
-
     const eventStyleGetter = (event, start, end, isSelected) => {
-        let backgroundColor = event.duration === 0.5 ? 'yellow' : '#4CAF50'; // Yellow for half-day, green for full-day
-        if (event.leaveType === 'Sick Leave') {
-            backgroundColor = 'yellow'; // Customize as needed
+        let backgroundColor = '#4CAF50';
+        if(event.leaveType.includes("Sick Leave")){
+            backgroundColor = 'yellow'
         }
         if (event.requestStatus === 'Pending Manager') {
             backgroundColor = 'lightgrey';
@@ -82,6 +86,7 @@ const HRSharedCalendar = ({ token, onClose }) => {
     const closeOverlay = () => {
         setCalendarOverlay(false);
     };
+    console.log("events: "+JSON.stringify(events, null, 2))
 
     return (
         <div style={{ height: '500px', width: '100%', margin: '0 auto', position: 'relative' }}>
@@ -97,8 +102,8 @@ const HRSharedCalendar = ({ token, onClose }) => {
             />
             {calendarOverlay && (
                 <div id="calendar-overlay">
-                    <button className="overlay-close-button" onClick={closeOverlay}>X</button>
-                    <ul>
+                    <ul className='calender-overlay__list'>
+                        <button className="overlay-close-button" onClick={closeOverlay}>X</button>
                         <h2>{moment(calendarOverlayEvents[0].start).format("YYYY-MM-DD")}</h2>
                         {calendarOverlayEvents.map((e, index) => (
                             <li key={index}>{e.title}</li>

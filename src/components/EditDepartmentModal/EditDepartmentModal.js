@@ -4,10 +4,12 @@ import Axios from 'axios';
 
 const EditDepartmentModal = ({ isOpen, onClose, department, onDepartmentUpdated, token }) => {
     const [name, setName] = useState('');
+    const [managerId, setManagerId] = useState('');
 
     useEffect(() => {
         if (department) {
             setName(department.name);
+            setManagerId(department.manager_id);
         }
     }, [department]);
 
@@ -31,7 +33,7 @@ const EditDepartmentModal = ({ isOpen, onClose, department, onDepartmentUpdated,
         e.preventDefault();
         try {
             const hrUser = getCookie('user_id'); // Retrieve the HR user ID from cookie
-            await Axios.patch(`http://localhost:5000/departments/${department.id}`, { name, hrUser }, {
+            await Axios.patch(`http://localhost:5000/departments/${department.id}`, { name, manager_id: managerId, hrUser }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             onDepartmentUpdated();
@@ -48,7 +50,7 @@ const EditDepartmentModal = ({ isOpen, onClose, department, onDepartmentUpdated,
             <DialogTitle>Edit Department</DialogTitle>
             <DialogContent>
                 <DialogContentText>
-                    To edit this department, please change the name below.
+                    To edit this department, please change the name and manager ID below.
                 </DialogContentText>
                 <form onSubmit={handleSubmit}>
                     <TextField
@@ -59,6 +61,14 @@ const EditDepartmentModal = ({ isOpen, onClose, department, onDepartmentUpdated,
                         autoComplete="off"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Manager ID"
+                        fullWidth
+                        autoComplete="off"
+                        value={managerId}
+                        onChange={(e) => setManagerId(e.target.value)}
                     />
                     <DialogActions>
                         <Button onClick={onClose} color="primary">

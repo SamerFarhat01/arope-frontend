@@ -113,7 +113,7 @@ button.rmdp-arrow-container:hover .rmdp-arrow {
 }
 
 .full-day {
-    background-color: #4CAF50; /* Green for full day */
+    background-color: #4CAF50;
     color: white;
 }
 
@@ -128,7 +128,7 @@ button.rmdp-arrow-container:hover .rmdp-arrow {
 }
 
 .HD-AM, .HD-PM {
-    background-color: rgb(238, 93, 93); /* Yellow for half day */
+    background-color: rgb(238, 93, 93); 
     color: black !important;
 }
 
@@ -142,7 +142,7 @@ button.rmdp-arrow-container:hover .rmdp-arrow {
 
 .HD-AM.HD-PM {
     background: none;
-    background-color: rgb(238, 93, 93) !important; /* Green for full day */
+    background-color: rgb(238, 93, 93) !important; 
     color: black !important;
 }
 
@@ -155,7 +155,7 @@ button.rmdp-arrow-container:hover .rmdp-arrow {
 }
 
 .NONE {
-    background-color: rgb(238, 93, 93); /* Yellow for half day */
+    background-color: rgb(238, 93, 93);
     color: black !important;
 }
 
@@ -174,4 +174,12 @@ button.rmdp-arrow-container:hover .rmdp-arrow {
     border-radius: 50%;
 }
 
+
+.PTO{
+    background-color: #FFA500 !important;
+    color: black !important;
+}
+.ptoStatement{
+    color: #FFA500;
+}
 

@@ -40,7 +40,8 @@ const LeaveSummary = ({ employeeId }) => {
             const monthTotals = {};
             let totalDaysUsed = 0;
             let sickLeaveDays = 0;
-            let totalPtoMinutes = 0;
+            let currentMonthPtoMinutes = 0;
+            const currentMonth = new Date().getMonth();
 
             leaveSummary.forEach(leave => {
                 const date = new Date(leave.date);
@@ -48,7 +49,6 @@ const LeaveSummary = ({ employeeId }) => {
                 const day = date.getDate();
                 let duration = Math.abs(parseFloat(leave.net_amount)) || 0;
                 const leaveType = leave.leave_type;
-                const requestStatus = leave.request_status;
 
                 if (!data[month]) {
                     data[month] = {};
@@ -57,24 +57,26 @@ const LeaveSummary = ({ employeeId }) => {
                     monthTotals[month] = 0;
                 }
 
-                if (leaveType === 'Personal Time Off') {
-                    if (leave.time_intervals) {
-                        const ptoMinutes = leave.time_intervals.split(',').reduce((total, interval) => {
-                            const [start, end] = interval.trim().split(' - ');
-                            const startTime = moment(`1970-01-01 ${start}`, "YYYY-MM-DD HH:mm:ss");
-                            const endTime = moment(`1970-01-01 ${end}`, "YYYY-MM-DD HH:mm:ss");
-                            const minutes = endTime.diff(startTime, 'minutes');
-                            return total + minutes;
-                        }, 0);
-                        totalPtoMinutes += ptoMinutes;
-                        duration = `${ptoMinutes}min`;
-                        data[month][day] = { duration, leaveType: 'Personal Time Off' };
+                if (leaveType === 'Personal Time Off' && leave.time_intervals) {
+                    const ptoMinutes = leave.time_intervals.split(',').reduce((total, interval) => {
+                        const [start, end] = interval.trim().split(' - ');
+                        const startTime = moment(`1970-01-01 ${start}`, "YYYY-MM-DD HH:mm:ss");
+                        const endTime = moment(`1970-01-01 ${end}`, "YYYY-MM-DD HH:mm:ss");
+                        const minutes = endTime.diff(startTime, 'minutes');
+                        return total + minutes;
+                    }, 0);
+
+                    if (month === currentMonth) {
+                        currentMonthPtoMinutes += ptoMinutes;
                     }
+
+                    duration = `${ptoMinutes}min`;
+                    data[month][day] = { duration, leaveType: 'Personal Time Off' };
                 } else {
                     data[month][day] = { duration, leaveType };
                     monthTotals[month] += duration;
 
-                    if (leaveType === 'Annual Paid Leave' || leaveType === 'Unpaid Leave' || requestStatus === 'HR Remove') {
+                    if (leaveType === 'Annual Paid Leave' || leaveType === 'Unpaid Leave' || leave.request_status === 'HR Remove') {
                         totalDaysUsed += duration;
                     }
 
@@ -87,7 +89,7 @@ const LeaveSummary = ({ employeeId }) => {
             setGridData(data);
             setTotals(monthTotals);
             setTotalSickLeaves(sickLeaveDays);
-            setTotalPTO(totalPtoMinutes);
+            setTotalPTO(currentMonthPtoMinutes);
             setEmployeeInfo(prev => {
                 const updatedInfo = { ...prev, daysUsed: totalDaysUsed };
                 return updatedInfo;
@@ -159,3 +161,4 @@ const LeaveSummary = ({ employeeId }) => {
 };
 
 export default LeaveSummary;
+

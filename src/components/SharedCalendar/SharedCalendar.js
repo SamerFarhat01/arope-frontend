@@ -28,7 +28,7 @@ const SharedCalendar = ({ token, onClose }) => {
                     const leaveDates = leave.leave_date.split(','); // Assuming leave.leave_date is a comma-separated string of dates
                     return leaveDates.map(date => {
                         let title = `${leave.employee_name} - ${leave.type_of_leave}`;
-                        if (leave.duration === 0.5) {
+                        if (leave.duration == 0.5) {
                             title += ` (${leave.time === 'AM' ? 'Morning' : 'Afternoon'})`;
                         } else {
                             title += ` (Full Day)`;
@@ -55,9 +55,11 @@ const SharedCalendar = ({ token, onClose }) => {
     }, [token]);
 
     const eventStyleGetter = (event, start, end, isSelected) => {
-        let backgroundColor = event.duration === 0.5 ? 'yellow' : '#4CAF50'; // Yellow for half-day, green for full-day
-        if (event.leaveType === 'Sick Leave') {
-            backgroundColor = 'yellow'; // Customize as needed
+
+        let backgroundColor = '#4CAF50';
+        
+        if(event.leaveType.includes("Sick Leave")){
+            backgroundColor = 'yellow'
         }
         if (event.requestStatus === 'Pending Manager') {
             backgroundColor = 'lightgrey';
@@ -85,7 +87,7 @@ const SharedCalendar = ({ token, onClose }) => {
     };
 
     return (
-        <div style={{ height: '500px', width: '100%', margin: '0 auto', position: 'relative' }}>
+        <div style={{ height: '500px', width: '100%', margin: '0 auto', position: 'relative', padding: '15px'  }}>
             <button className="close-button" onClick={onClose}>X</button>
             <Calendar
                 localizer={localizer}
@@ -99,8 +101,8 @@ const SharedCalendar = ({ token, onClose }) => {
             />
             {calendarOverlay && (
                 <div id="calendar-overlay">
-                    <button className="overlay-close-button" onClick={closeOverlay}>X</button>
-                    <ul>
+                    <ul className='calendar-overlay__list'>
+                        <button className="overlay-close-button" onClick={closeOverlay}>X</button>
                         <h2>{moment(calendarOverlayEvents[0].start).format("YYYY-MM-DD")}</h2>
                         {calendarOverlayEvents.map((e, index) => (
                             <li key={index}>{e.title}</li>

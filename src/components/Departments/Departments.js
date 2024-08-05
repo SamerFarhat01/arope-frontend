@@ -10,6 +10,7 @@ const Departments = ({ token }) => {
     const [openAddDialog, setOpenAddDialog] = useState(false);
     const [openEditDialog, setOpenEditDialog] = useState(false);
     const [newDepartmentName, setNewDepartmentName] = useState('');
+    const [newManagerId, setNewManagerId] = useState('');
     const [selectedDepartment, setSelectedDepartment] = useState(null);
     const [error, setError] = useState('');
 
@@ -47,7 +48,7 @@ const Departments = ({ token }) => {
 
         try {
             const hrUser = getCookie('user_id'); // Retrieve the HR user ID from cookie
-            const response = await Axios.post('http://localhost:5000/departments', { name: newDepartmentName, hrUser }, {
+            const response = await Axios.post('http://localhost:5000/departments', { name: newDepartmentName, manager_id: newManagerId, hrUser }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -56,6 +57,7 @@ const Departments = ({ token }) => {
             setDepartments([...departments, newDepartment]);
 
             setNewDepartmentName('');
+            setNewManagerId('');
             handleCloseAdd();
         } catch (error) {
             console.error('Error adding department:', error);
@@ -107,7 +109,8 @@ const Departments = ({ token }) => {
                     rows={departments}
                     columns={[
                         { field: 'id', headerName: 'Department ID', width: 300 },
-                        { field: 'name', headerName: 'Department Name', width: 300 }
+                        { field: 'name', headerName: 'Department Name', width: 300 },
+                        { field: 'manager_id', headerName: 'Manager ID', width: 300 }
                     ]}
                     pageSize={10}
                     onRowClick={handleRowClick}
@@ -119,7 +122,7 @@ const Departments = ({ token }) => {
                 <DialogTitle>Add New Department</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        To add a new department, please enter the department name here.
+                        To add a new department, please enter the department name and manager ID here.
                     </DialogContentText>
                     <TextField
                         autoFocus
@@ -133,6 +136,14 @@ const Departments = ({ token }) => {
                         }}
                         error={!!error}
                         helperText={error}
+                        autoComplete="off"
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Manager ID"
+                        fullWidth
+                        value={newManagerId}
+                        onChange={(e) => setNewManagerId(e.target.value)}
                         autoComplete="off"
                     />
                 </DialogContent>

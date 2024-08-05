@@ -6,7 +6,7 @@ import { Button, Menu, MenuItem } from '@mui/material';
 
 const BlankPage = ({ isHr, isManager, isEmployee }) => {
     const navigate = useNavigate();
-    const [anchorEl, setAnchorEl] = React.useState(null);
+    const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
 
     const handleMenuClick = (event) => {
@@ -51,17 +51,14 @@ const BlankPage = ({ isHr, isManager, isEmployee }) => {
                         <MenuItem onClick={() => handleNavigate('/logs')}>Logs</MenuItem>
                         <MenuItem onClick={() => handleNavigate('/holiday-form')}>Holiday Form</MenuItem>
                         <MenuItem onClick={() => handleNavigate('/shared-calendar')}>Shared Calendar</MenuItem>
-                        <MenuItem onClick={() => handleNavigate('/leave-requests')}>Leave Requests</MenuItem> 
                     </>
                 )}
                 {isManager && (
                     <>
                         <MenuItem onClick={() => handleNavigate('/manager-leave-requests')}>Manager Leave Requests</MenuItem>
-                        <MenuItem onClick={() => handleNavigate('/leave-requests')}>Leave Requests</MenuItem>
                     </>
-                    
                 )}
-                {isEmployee && !isHr && !isManager && (
+                {(isHr || isManager || isEmployee) && (
                     <>
                         <MenuItem onClick={() => handleNavigate('/leave-requests')}>Leave Requests</MenuItem>
                         <MenuItem onClick={() => handleNavigate('/leave-summary')}>Leave Summary</MenuItem>
@@ -73,3 +70,4 @@ const BlankPage = ({ isHr, isManager, isEmployee }) => {
 };
 
 export default BlankPage;
+
