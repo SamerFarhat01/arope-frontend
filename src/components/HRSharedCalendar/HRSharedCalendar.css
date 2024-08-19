@@ -136,23 +136,17 @@ General styles for the modal overlay and container
 .rbc-day-slot .rbc-time-slot {
     border-top: 1px solid #f5f5f5;
 }
-
-.rbc-month-header > :first-child,
-.rbc-month-header > :last-child {
-  display: none;
+.rbc-agenda-date-cell, .rbc-agenda-event-cell {
+    border: 1px solid lightgray;
+}
+.rbc-agenda-table tr {
+    background-color: transparent !important;
 }
 
-.rbc-row-segment {
-    flex-basis: 20% !important;
-    max-width: 20% !important;
+.rbc-agenda-time-cell {
+    display: none !important;
 }
 
-.rbc-month-row > .rbc-row-bg > :first-child,
-.rbc-month-row > .rbc-row-bg > :last-child {
-  display: none;
+.rbc-agenda-table thead tr th:nth-child(2) {
+    display: none !important;
 }
-
-.rbc-row-content > .rbc-row > .rbc-date-cell:first-child,
-.rbc-row-content > .rbc-row > .rbc-date-cell:last-child {
-  display: none;
-}  

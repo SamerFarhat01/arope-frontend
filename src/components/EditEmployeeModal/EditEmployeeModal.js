@@ -14,6 +14,9 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
     const [manager, setManager] = useState([]);
     const [managerName, setManagerName] = useState('');
     const [managerId, setManagerId] = useState([]);
+    const [managersOfManagers, setManagersOfManagers] = useState([]);
+    const [managerOfManagerId, setManagerOfManagerId] = useState(null);
+    const [managerOfManagerName, setManagerOfManagerName] = useState(null);
 
     function getCookie(cname) {
         let name = cname + "=";
@@ -43,6 +46,17 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
         }
     };
 
+    const fetchNonDepartmentManagers = async () => {
+        try {
+            const response = await Axios.get(`http://localhost:5000/managers-of-managers`, {
+                headers: { Authorization: `Bearer ${getCookie('access_token')}` },
+            });
+            setManagersOfManagers(response.data.filter(mom => mom.id != employee.id));
+        } catch (error) {
+            console.error('Error fetching managers:', error);
+        }
+    }
+
     useEffect(() => {
         if (employee) {
             const initialData = {
@@ -53,6 +67,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
                 departmentName: employee.department_name,
                 departmentId: departments.filter(d => d.name === employee.department_name)[0]?.id,
                 managerName: employee.manager_first_name ? `${employee.manager_first_name} ${employee.manager_last_name}` : "None",
+                managerOfManagerId: employee.department_name == "Manager" ? employee.manager_id : null,
                 managerId: [],
             };
 
@@ -64,6 +79,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
             setDepartmentName(initialData.departmentName);
             setDepartmentId(initialData.departmentId);
             setDepartment(departments.filter(d => d.name === employee.department_name)[0]);
+            setManagerOfManagerId(initialData.managerOfManagerId);
+            setManagerOfManagerName(initialData.managerName);
         }
     }, [employee, departments]);
 
@@ -108,6 +125,14 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
         onClose();
     };
 
+    const changeManagerOfManager = (id) => {
+        (id == "None") ? setManagerId(null) : setManagerId(id)
+    }
+
+    useEffect(() => {
+        fetchNonDepartmentManagers()
+    }, [])
+
     if (!isOpen) return null;
 
     return (
@@ -151,7 +176,17 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
                     }
                     <div>
                         <label>Manager:</label>
-                        <input type="text" value={isManager ? "N/A" : manager?.first_name + " " + manager?.last_name} disabled />
+                        {
+                            (isManager || department?.name == "Manager") ?
+                            <select value={managerOfManagerId} onChange={(e) => changeManagerOfManager(e.target.value)} required>
+                                <option value={managerOfManagerId}>{managerOfManagerName || "None"}</option>
+                                {managersOfManagers.map(mom => (
+                                    <option key={mom.id} value={mom.id}>{mom.first_name} {mom.last_name}</option>
+                                ))}
+                            </select>
+                            :
+                            <input type="text" value={manager?.first_name + " " + manager?.last_name} disabled />
+                        }
                     </div>
                     <button type="submit">Save Changes</button>
                 </form>
@@ -161,4 +196,3 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
 };
 
 export default EditEmployeeModal;
-

@@ -30,7 +30,7 @@ const Login = ({ onLoginSuccess }) => {
     }
 
     useEffect(() => {
-        document.querySelector('.background-video').playbackRate = 0.65;
+        document.querySelector('.background-video').playbackRate = 0.6;
         if (email) {
             const handler = setTimeout(() => {
                 checkIfInitialLogin();

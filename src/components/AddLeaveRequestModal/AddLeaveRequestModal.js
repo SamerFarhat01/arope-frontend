@@ -51,12 +51,12 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
     }, [employeeId, token]);
 
     useEffect(() => {
-        const updatedLeaveDetails = selectedDates.map(date => {
-            const formattedDate = moment(date.toDate()).format('YYYY-MM-DD');
-            const existing = leaveDetails.find(detail => detail.date === formattedDate);
-            return existing ? existing : { date: formattedDate, duration: '', time: '', start_time: '', end_time: '' };
-        });
-        setLeaveDetails(updatedLeaveDetails);
+            const updatedLeaveDetails = selectedDates.map(date => {
+                const formattedDate = moment(date.toDate()).format('YYYY-MM-DD');
+                const existing = leaveDetails.find(detail => detail.date === formattedDate);
+                return existing ? existing : { date: formattedDate, duration: '', time: '', start_time: '', end_time: '' };
+            });
+            setLeaveDetails(updatedLeaveDetails);
     }, [selectedDates]);
 
     useEffect(() => {
@@ -110,14 +110,6 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
         getPreviousUnpaidLeaveDays();
     }, [employeeId, token]);
 
-    useEffect(() => {
-        if (editingRequest) {
-            setTypeOfLeave(editingRequest.typeOfLeave);
-            setSelectedDates(editingRequest.dates.split(',').map(date => new Date(date)));
-            setLeaveDetails(editingRequest.leaveDetails);
-        }
-    }, [editingRequest]);
-
     const handleDurationChange = (date, duration) => {
         const formattedDate = moment(date).format('YYYY-MM-DD');
         if (
@@ -164,6 +156,10 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (typeOfLeave === '') {
+            alert('Please select a leave type before submitting.');
+            return;
+        }
 
         const quantity = leaveDetails.reduce((total, detail) => {
             const duration = parseFloat(detail.duration);
@@ -231,11 +227,6 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
         return className;
     };
 
-    const isWeekend = (date) => {
-        const day = date.weekDay.index;
-        return day === 6 || day === 0; // 6 is Saturday, 0 is Sunday
-    };
-
     const isHoliday = (date) => {
         const formattedDate = moment(date.toDate()).format('YYYY-MM-DD');
         return holidayDates.some(holiday => formattedDate >= holiday.start && formattedDate <= holiday.end);
@@ -248,8 +239,9 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
 
     const isDisabled = (date) => {
         const formattedDate = moment(date.toDate()).format('YYYY-MM-DD');
-        return isWeekend(date) || isHoliday(date);
+        return isHoliday(date); // No need to check if it's a weekend anymore
     };
+    
 
     const getUnavailableActions = (date) => {
         const UDs = unavailableDates.filter(ud => ud.date.split("T")[0] === date);
@@ -258,7 +250,8 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
 
     const getDayOptions = (formattedDate) => {
         const ud = unavailableDates.find(ud => ud.date.split("T")[0] === formattedDate);
-        if (!ud) return { disableFullDay: false, disableHalfDay: false, disableAM: false, disablePM: false };
+        if (!ud) return { disableFullDay: false, disableHalfDay: typeOfLeave === 'Marital' || typeOfLeave === 'Maternity' || typeOfLeave === 'Paternity'
+            , disableAM: false, disablePM: false };
         
         switch (ud.action) {
             case 'NONE':
@@ -276,12 +269,23 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
 
     const handleTypeOfLeaveChange = (e) => {
         const selectedType = e.target.value;
+    
+        // Check if the selected type is "Unpaid Leave" and if there is a remaining balance
         if (selectedType === 'Unpaid Leave' && remainingBalance > 0) {
             alert('You can only request unpaid leave if your balance is zero.');
             return;
         }
+    
         setTypeOfLeave(selectedType);
+    
+        // If a special leave type is selected and dates are chosen
+        if (selectedType === 'Marital' || selectedType === 'Maternity' || selectedType === 'Paternity') {            
+            setSelectedDates([]);
+            setLeaveDetails([]);
+        }
     };
+    
+    
 
     if (!isOpen) return null;
 
@@ -304,6 +308,10 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
                             <option value="Unpaid Leave">Unpaid Leave</option>
                             <option value="Sick Leave Without Note">Sick Leave Without Note</option>
                             <option value="Personal Time Off">Personal Time Off</option>
+                            <option value="Condolences">Condolences</option>
+                            <option value="Marital">Marital</option>
+                            <option value="Maternity">Maternity</option>
+                            <option value="Paternity">Paternity</option>
                         </select>
                     </div>
                     <p className='ptoStatement'>Remaining Personal Time Off (minutes): {remainingTimeOffMinutes}</p>
@@ -321,6 +329,7 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
                             className="teal prime"
                             arrowLeft="←"
                             arrowRight="→"
+                            disabled={typeOfLeave === ''}
                             mapDays={({ date }) => {
                                 const formattedDate = moment(date.toDate()).format('YYYY-MM-DD');
                                 const dayOptions = getDayOptions(formattedDate);

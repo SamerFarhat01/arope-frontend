@@ -10,7 +10,7 @@ const Departments = ({ token }) => {
     const [openAddDialog, setOpenAddDialog] = useState(false);
     const [openEditDialog, setOpenEditDialog] = useState(false);
     const [newDepartmentName, setNewDepartmentName] = useState('');
-    const [newManagerId, setNewManagerId] = useState('');
+    const [newManagerId, setNewManagerId] = useState(null);
     const [selectedDepartment, setSelectedDepartment] = useState(null);
     const [error, setError] = useState('');
 

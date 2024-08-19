@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import Axios from 'axios';
 import { Button } from '@mui/material';
@@ -35,6 +36,7 @@ const LeavesPage = () => {
             const formattedTransaction = {
                 ...transaction,
                 dates: transaction.dates || "No Dates",
+                time: ['Marital', 'Paternity', 'Maternity'].includes(transaction.typeOfLeave) ? '' : (transaction.time || 'N/A'),
                 lastModified: new Date(transaction.lastModified).toLocaleString('en-US', options)
             };
             console.log(`Transaction ID ${transaction.id}: Time values - ${transaction.time}`);

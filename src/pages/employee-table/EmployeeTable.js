@@ -72,6 +72,3 @@ const EmployeeTable = ({ token, employees, getEmployees, deleteEmployee, departm
 };
 
 export default EmployeeTable;
-
-
-

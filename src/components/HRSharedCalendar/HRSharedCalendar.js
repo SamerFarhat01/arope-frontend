@@ -38,9 +38,9 @@ const HRSharedCalendar = ({ token, onClose }) => {
                     }
 
                     return {
+                        key: leave.employee_id + "-" + leave.leaveDate,
                         title,
-                        start: leaveDate,
-                        end: leaveDate,
+                        date: leaveDate,
                         allDay: leave.duration === 1,
                         leaveType: leave.type_of_leave,
                         requestStatus: leave.request_status,
@@ -92,8 +92,8 @@ const HRSharedCalendar = ({ token, onClose }) => {
             <Calendar
                 localizer={localizer}
                 events={events}
-                startAccessor="start"
-                endAccessor="end"
+                startAccessor="date"
+                endAccessor="date"
                 views={['month', 'agenda']}
                 style={{ height: '500px', width: '100%' }}
                 eventPropGetter={eventStyleGetter}
@@ -105,7 +105,7 @@ const HRSharedCalendar = ({ token, onClose }) => {
                         <button className="overlay-close-button" onClick={closeOverlay}>X</button>
                         <h2>{moment(calendarOverlayEvents[0].start).format("YYYY-MM-DD")}</h2>
                         {calendarOverlayEvents.map((e, index) => (
-                            <li key={index}>{e.title}</li>
+                            <li key={e.key}>{e.title}</li>
                         ))}
                     </ul>
                 </div>

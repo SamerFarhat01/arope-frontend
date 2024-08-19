@@ -17,6 +17,7 @@ const ManagerLeaveRequests = ({ token }) => {
                 });
                 const formattedRequests = response.data.map(request => ({
                     ...request,
+                    time: ['Marital', 'Paternity', 'Maternity'].includes(request.typeOfLeave) ? '' : request.time,
                     lastModified: new Date(request.lastModified).toLocaleString('en-US', {
                         year: 'numeric',
                         month: 'long',

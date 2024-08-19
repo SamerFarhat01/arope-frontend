@@ -35,9 +35,10 @@ const SharedCalendar = ({ token, onClose }) => {
                         }
 
                         return {
+                            key: leave.employee_id + "-" + new Date(date),
                             title,
-                            start: new Date(date),
-                            end: new Date(date),
+                            // start: new Date(date).toISOString().split('T')[0],
+                            date: new Date(date).toISOString().split('T')[0],
                             allDay: leave.duration === 1,
                             leaveType: leave.type_of_leave,
                             requestStatus: leave.request_status,
@@ -45,6 +46,7 @@ const SharedCalendar = ({ token, onClose }) => {
                         };
                     });
                 });
+                console.log(leaves);
                 setEvents(leaves);
             } catch (error) {
                 console.error('Error fetching department leaves:', error);
@@ -57,6 +59,8 @@ const SharedCalendar = ({ token, onClose }) => {
     const eventStyleGetter = (event, start, end, isSelected) => {
 
         let backgroundColor = '#4CAF50';
+
+        console.log(event)
         
         if(event.leaveType.includes("Sick Leave")){
             backgroundColor = 'yellow'
@@ -66,11 +70,9 @@ const SharedCalendar = ({ token, onClose }) => {
         }
         const style = {
             backgroundColor,
-            borderRadius: '8px',
             opacity: 0.8,
             color: 'black',
             border: '0px',
-            display: 'block',
         };
         return {
             style,
@@ -92,8 +94,9 @@ const SharedCalendar = ({ token, onClose }) => {
             <Calendar
                 localizer={localizer}
                 events={events}
-                startAccessor="start"
-                endAccessor="end"
+                startAccessor="date"
+                endAccessor="date"
+                onSelectEvent={e => console.log(e)}
                 views={['month', 'agenda']}
                 style={{ height: '500px', width: '100%' }}
                 eventPropGetter={eventStyleGetter}
@@ -103,9 +106,9 @@ const SharedCalendar = ({ token, onClose }) => {
                 <div id="calendar-overlay">
                     <ul className='calendar-overlay__list'>
                         <button className="overlay-close-button" onClick={closeOverlay}>X</button>
-                        <h2>{moment(calendarOverlayEvents[0].start).format("YYYY-MM-DD")}</h2>
-                        {calendarOverlayEvents.map((e, index) => (
-                            <li key={index}>{e.title}</li>
+                        <h2>{calendarOverlayEvents[0].date}</h2>
+                        {calendarOverlayEvents.map((e) => (
+                            <li key={e.key}>{e.title}</li>
                         ))}
                     </ul>
                 </div>

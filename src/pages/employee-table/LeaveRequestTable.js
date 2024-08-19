@@ -19,24 +19,42 @@ const LeaveRequestsTable = ({ token, userId, employees, departments }) => {
                 const response = await Axios.get(`http://localhost:5000/leave-requests/${userId}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                const formattedRequests = response.data.map(request => ({
-                    ...request,
-                    dates: request.dates ? request.dates.split(',').map(date => new Date(date).toLocaleString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    })).join(', ') : "No Dates",
-                    time: request.time ? request.time.split(',').join(', ') : 'N/A', // Handle time field
-                    lastModified: new Date(request.lastModified).toLocaleString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: 'numeric',
-                        second: 'numeric',
-                        hour12: true,
-                    }),
-                }));
+                const formattedRequests = response.data.map(request => {
+                    let formattedDates;
+    
+                    // Check if the dates field is not null and contains a range (indicated by '>>')
+                    if (request.dates && request.dates.includes('>>')) {
+                        formattedDates = request.dates;
+                    } else if (request.dates) {
+                        // Otherwise, split and format each date
+                        formattedDates = request.dates 
+                            ? request.dates.split(',').map(date => new Date(date).toLocaleString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            })).join(', ') 
+                            : "No Dates";
+                    } else {
+                        // If dates is null or empty, set it to "No Dates"
+                        formattedDates = "No Dates";
+                    }
+    
+                    return {
+                        ...request,
+                        dates: formattedDates,
+                        time: ['Marital', 'Paternity', 'Maternity'].includes(request.typeOfLeave) ? '' : (request.time ? request.time.split(',').join(', ') : 'N/A'), // Handle time field
+                        lastModified: new Date(request.lastModified).toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            second: 'numeric',
+                            hour12: true,
+                        }),
+                    };
+                });
+    
                 setLeaveRequests(formattedRequests);
             } catch (error) {
                 console.error('Error fetching leave requests:', error);
