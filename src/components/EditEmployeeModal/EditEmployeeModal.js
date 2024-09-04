@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Axios from 'axios';
 import './EditEmployeeModal.css';
 
-const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, departments, isManager }) => {
+const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, departments, isManager, locations }) => {
     const [initialEmployeeData, setInitialEmployeeData] = useState({});
     const [firstName, setFirstName] = useState('');
     const [middleName, setMiddleName] = useState('');
@@ -12,6 +12,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
     const [departmentId, setDepartmentId] = useState('');
     const [department, setDepartment] = useState(null);
     const [manager, setManager] = useState([]);
+    const [location, setLocation] = useState(null);
+    const [locationId, setLocationId] = useState(null);
     const [managerName, setManagerName] = useState('');
     const [managerId, setManagerId] = useState([]);
     const [managersOfManagers, setManagersOfManagers] = useState([]);
@@ -57,6 +59,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
         }
     }
 
+
     useEffect(() => {
         if (employee) {
             const initialData = {
@@ -69,6 +72,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
                 managerName: employee.manager_first_name ? `${employee.manager_first_name} ${employee.manager_last_name}` : "None",
                 managerOfManagerId: employee.department_name == "Manager" ? employee.manager_id : null,
                 managerId: [],
+                locationName: employee.location_name
             };
 
             setInitialEmployeeData(initialData);
@@ -81,8 +85,10 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
             setDepartment(departments.filter(d => d.name === employee.department_name)[0]);
             setManagerOfManagerId(initialData.managerOfManagerId);
             setManagerOfManagerName(initialData.managerName);
+            setLocation(initialData.locationName);
+            setLocationId(locations?.filter(loc => loc.location_name == initialData.locationName)[0]?.id)
         }
-    }, [employee, departments]);
+    }, [employee, departments, locations]);
 
     useEffect(() => {
         fetchManager(departmentId);
@@ -92,6 +98,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
         setDepartmentId(id);
         setDepartment(departments.filter(d => d.id === id)[0]);
     }
+    console.log(departments)
+    console.log(locations)
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -102,7 +110,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
                 lastName,
                 email,
                 departmentId,
-                managerId
+                managerId,
+                locationId
             };
             await Axios.patch(`http://localhost:5000/employee/${employee.id}`, updatedEmployee, {
                 headers: { Authorization: `Bearer ${getCookie('access_token')}` }
@@ -129,11 +138,20 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
         (id == "None") ? setManagerId(null) : setManagerId(id)
     }
 
+    const changeLocation = (id) => {
+        console.log("Location ID: ", id)
+        setLocationId(id)
+        const selectedLocation = locations.find(loc => loc.id == id);
+        console.log(selectedLocation)
+        setLocation(selectedLocation.location_name);
+    }
+
     useEffect(() => {
         fetchNonDepartmentManagers()
     }, [])
 
     if (!isOpen) return null;
+    console.log("locations: "+locationId)
 
     return (
         <div className="modal-overlay">
@@ -187,6 +205,15 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
                             :
                             <input type="text" value={manager?.first_name + " " + manager?.last_name} disabled />
                         }
+                    </div>
+                    <div>
+                        <label>Location:</label>
+                        <select value={locations?.filter(loc => loc.location_name == location)[0].id} onChange={(e) => changeLocation(e.target.value)} required>
+                            <option value={locations?.filter(loc => loc.location_name == location)[0].id}>{location}</option>
+                            {locations.filter(loc => loc.location_name !== location).map(loc => (
+                                <option key={loc.id} value={loc.id}>{loc.location_name}</option>
+                            ))}
+                        </select>
                     </div>
                     <button type="submit">Save Changes</button>
                 </form>

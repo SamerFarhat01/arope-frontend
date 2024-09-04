@@ -1,9 +1,8 @@
-/* src/components/ManagerLeaveRequests/ManagerLeaveRequests.css */
+/* src/components/FirstApprovalRequests/FirstApprovalRequests.css */
 
 .leave-requests-container {
     position: relative;
     padding: 20px;
-    
 }
 
 .data-grid-container {
@@ -45,6 +44,7 @@
     max-width: 100%;
     margin: 50px auto;
 }
+
 .event-list {
     background: #fff;
     border: 1px solid #ddd;

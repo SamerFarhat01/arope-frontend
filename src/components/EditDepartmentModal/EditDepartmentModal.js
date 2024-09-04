@@ -5,11 +5,14 @@ import Axios from 'axios';
 const EditDepartmentModal = ({ isOpen, onClose, department, onDepartmentUpdated, token }) => {
     const [name, setName] = useState('');
     const [managerId, setManagerId] = useState('');
+    const [supervisorId, setSupervisorId] = useState(''); 
+    const [branchManagerId, setBranchManagerId] = useState(''); 
 
     useEffect(() => {
         if (department) {
             setName(department.name);
             setManagerId(department.manager_id || '');
+            setSupervisorId(department.supervisor_id || '');
         }
     }, [department]);
 
@@ -33,7 +36,7 @@ const EditDepartmentModal = ({ isOpen, onClose, department, onDepartmentUpdated,
         e.preventDefault();
         try {
             const hrUser = getCookie('user_id'); // Retrieve the HR user ID from cookie
-            const updateData = { name, hrUser };
+            const updateData = { name, hrUser, supervisor_id: supervisorId == '' ? null : supervisorId };
 
             if (managerId !== '') {
                 updateData.manager_id = managerId;
@@ -75,6 +78,14 @@ const EditDepartmentModal = ({ isOpen, onClose, department, onDepartmentUpdated,
                         autoComplete="off"
                         value={managerId}
                         onChange={(e) => setManagerId(e.target.value)}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Supervisor ID"
+                        fullWidth
+                        autoComplete="off"
+                        value={supervisorId}
+                        onChange={(e) => setSupervisorId(e.target.value)}
                     />
                     <DialogActions>
                         <Button onClick={onClose} color="primary">

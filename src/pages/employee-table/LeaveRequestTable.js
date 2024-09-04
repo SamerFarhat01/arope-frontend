@@ -107,7 +107,7 @@ const LeaveRequestsTable = ({ token, userId, employees, departments }) => {
             });
             setLeaveRequests(leaveRequests.map(req => 
                 req.id === selectedRequestId ? 
-                { ...req, requestStatus: req.requestStatus === 'Pending Manager' ? 'Cancelled' : 'Cancel Requested' } 
+                { ...req, requestStatus: (req.requestStatus === 'Pending First Approval' || req.requestStatus === 'Pending Manager') ? 'Cancelled' : 'Cancel Requested' } 
                 : req
             ));
             handleMenuClose();
@@ -129,7 +129,7 @@ const LeaveRequestsTable = ({ token, userId, employees, departments }) => {
             width: 100,
             renderCell: (params) => (
                 <>
-                    {(params.row.requestStatus === 'Pending Manager' || params.row.requestStatus === 'Approved' || params.row.requestStatus === 'Cancel Requested') && (
+                    {(params.row.requestStatus === 'Pending First Approval' || params.row.requestStatus === 'Pending Manager' || params.row.requestStatus === 'Approved') && (
                         <>
                             <IconButton onClick={(event) => handleMenuClick(event, params.row.id)}>
                                 <MoreVertIcon />
@@ -140,7 +140,7 @@ const LeaveRequestsTable = ({ token, userId, employees, departments }) => {
                                 onClose={handleMenuClose}
                             >
                                 <MenuItem onClick={handleCancelRequest}>
-                                    {params.row.requestStatus === 'Pending Manager' ? 'Cancel' : 'Request Cancel'}
+                                    {(params.row.requestStatus === 'Pending First Approval' || params.row.requestStatus === 'Pending Manager') ? 'Cancel' : 'Request Cancel'}
                                 </MenuItem>
                             </Menu>
                         </>

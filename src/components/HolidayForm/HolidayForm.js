@@ -32,31 +32,40 @@ const HolidayForm = ({ token }) => {
             console.error('Error fetching holidays:', error);
         }
     };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+    
         const holidayData = {
             startDate: format(startDate, 'yyyy-MM-dd'),
             endDate: format(endDate, 'yyyy-MM-dd'),
             description,
         };
-
+        console.log(holidayData)
+        const buttonText = e.nativeEvent.submitter.innerText;
+        console.log(buttonText)
+        console.log('Edit Holiday ID:', editHolidayId); 
         try {
             let response;
-            if (editMode && description) {
-                response = await Axios.patch(`http://localhost:5000/holidays/${description}`, holidayData, {
+            if (buttonText === 'UPDATE HOLIDAY' && editMode) {  // Using editHolidayId instead of description
+                response = await Axios.patch(`http://localhost:5000/holidays/${editHolidayId}`, holidayData, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-            } else if (addMode) {
+                console.log("PATCH request sent with ID:", editHolidayId);
+            } else if (addMode && buttonText === 'ADD HOLIDAY') {
                 response = await Axios.post('http://localhost:5000/holiday', holidayData, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
             }
-
-            setMessage(response.data.message);
+    
+            console.log('Response:', response);  // Log the response to understand its structure
+            if (response && response.data) {
+                setMessage(response.data.message);
+            } else {
+                setMessage('Holiday updated successfully');
+            }
             fetchHolidays(); // Refresh holidays after adding/editing
             resetForm();
+
         } catch (error) {
             console.error('Error adding/editing holiday:', error);
             setMessage('Error adding/editing holiday');
@@ -74,16 +83,16 @@ const HolidayForm = ({ token }) => {
     };
 
     const handleEdit = (holiday) => {
-        console.log('Holiday clicked:', holiday);
         setStartDate(new Date(holiday.start_date));
         setEndDate(new Date(holiday.end_date));
         setDescription(holiday.description);
-        console.log('Set description to:', holiday.description);
+        setEditHolidayId(holiday.id); 
+        console.log('Set Edit Holiday ID:', holiday.id);  // Set the id for later use in patch request
         setEditMode(true);
         setModalOpen(true);
         setMessage(''); // Clear message when editing
     };
-
+    console.log(editHolidayId)
     const handleAdd = () => {
         setAddMode(true);
         setModalOpen(true);
@@ -95,7 +104,6 @@ const HolidayForm = ({ token }) => {
     useEffect(() => {
         console.log('Modal title - editMode:', editMode, 'addMode:', addMode);
     }, [editMode, addMode]);
-
     return (
         <div className="holiday-form">
             <h2>Holidays</h2>

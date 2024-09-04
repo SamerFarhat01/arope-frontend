@@ -182,4 +182,7 @@ button.rmdp-arrow-container:hover .rmdp-arrow {
 .ptoStatement{
     color: #FFA500;
 }
+.daysToBeConsumed{
+    color:red;
+}
 

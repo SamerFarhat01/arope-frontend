@@ -17,6 +17,8 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
     const [remainingTimeOffMinutes, setRemainingTimeOffMinutes] = useState(120); 
     const [remainingBalance, setRemainingBalance] = useState(0);
     const [previousUnpaidLeaveDays, setPreviousUnpaidLeaveDays] = useState(0);
+    const [daysToBeConsumedByJune30, setDaysToBeConsumedByJune30] = useState(0);
+    const [employeeInfo, setEmployeeInfo] = useState([]);
 
     useEffect(() => {
         const getUnavailableDates = async () => {
@@ -87,7 +89,30 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
                 const response = await Axios.get(`http://localhost:5000/employee/${employeeId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
+                const employeeData = response.data
+                setEmployeeInfo(employeeData)
+                                // Calculate service years
+                const startMoment = moment(employeeData.start_date);
+                const currentMoment = moment();
+                const yearsOfService = currentMoment.diff(startMoment, 'years');
+                
+                                // Calculate leave days per year based on service years and manager status
+                let leaveDaysPerYear = 15;
+                if (employeeData.is_manager) {
+                    leaveDaysPerYear = 21;
+                } else if (yearsOfService >= 15) {
+                    leaveDaysPerYear = 21;
+                } else if (yearsOfService >= 5) {
+                    leaveDaysPerYear = 18;
+                }
+                
+                                // Calculate days to be consumed by June 30
+                const daysToBeConsumed = employeeData.days - (leaveDaysPerYear * 2);
+                    if (daysToBeConsumed > 0) {
+                        setDaysToBeConsumedByJune30(daysToBeConsumed);
+                }
                 setRemainingBalance(response.data.days);
+
             } catch (error) {
                 console.error('Error fetching remaining balance:', error);
             }
@@ -318,6 +343,9 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
                     <p>Remaining Sick Leave Without Note (days): {2 - previousSickLeaveDays}</p>
                     {remainingBalance == 0.0 && (
                         <p>Remaining Unpaid Leaves (days): {5 - previousUnpaidLeaveDays}</p>
+                    )}
+                    {daysToBeConsumedByJune30 > 0 && (
+                        <p className='daysToBeConsumed'><b>Days to be consumed by June 30: </b>{daysToBeConsumedByJune30}</p>
                     )}
                     <div className="form-group">
                         <label>Dates:</label>

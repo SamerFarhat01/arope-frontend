@@ -4,7 +4,7 @@ import './BlankPage.css';
 import videoFile from '../../assets/anim_logo_eng_arb_1-1835582063.mp4';
 import { Button, Menu, MenuItem } from '@mui/material';
 
-const BlankPage = ({ isHr, isManager, isEmployee }) => {
+const BlankPage = ({ isHr, isManager, isEmployee, isFirstApprover  }) => {
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
@@ -47,6 +47,7 @@ const BlankPage = ({ isHr, isManager, isEmployee }) => {
                 {isHr && (
                     <>
                         <MenuItem onClick={() => handleNavigate('/departments')}>Departments</MenuItem>
+                        <MenuItem onClick={() => handleNavigate('/locations')}>Locations</MenuItem>
                         <MenuItem onClick={() => handleNavigate('/staff')}>Staff</MenuItem>
                         <MenuItem onClick={() => handleNavigate('/logs')}>Logs</MenuItem>
                         <MenuItem onClick={() => handleNavigate('/holiday-form')}>Holiday Form</MenuItem>
@@ -58,7 +59,12 @@ const BlankPage = ({ isHr, isManager, isEmployee }) => {
                         <MenuItem onClick={() => handleNavigate('/manager-leave-requests')}>Manager Leave Requests</MenuItem>
                     </>
                 )}
-                {(isHr || isManager || isEmployee) && (
+                {isFirstApprover && (
+                    <>
+                        <MenuItem onClick={() => handleNavigate('/first-approval-requests')}>Employee Leave Requests</MenuItem>
+                    </>
+                )}
+                {(isHr || isManager || isEmployee || isFirstApprover) && (
                     <>
                         <MenuItem onClick={() => handleNavigate('/leave-requests')}>Leave Requests</MenuItem>
                         <MenuItem onClick={() => handleNavigate('/leave-summary')}>Leave Summary</MenuItem>

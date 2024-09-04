@@ -5,7 +5,7 @@ import './EmployeeDetail.css';
 import Axios from 'axios';
 import { Button } from '@mui/material';
 
-const EmployeeDetail = ({ departments, getEmployees }) => {
+const EmployeeDetail = ({ departments, getEmployees, locations }) => {
     const [employee, setEmployee] = useState({});
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -62,6 +62,10 @@ const EmployeeDetail = ({ departments, getEmployees }) => {
                         <th>Manager</th>
                         <td>{employee.manager_first_name ? `${employee.manager_first_name} ${employee.manager_last_name}` : "None"}</td>
                     </tr>
+                    <tr>
+                        <th>Location</th>
+                        <td>{employee.location_name}</td>
+                    </tr>
                 </tbody>
             </table>
             <Button style={{ "marginRight": "15px" }} variant="contained" color="success" onClick={handleEditClick}>Edit</Button>
@@ -72,6 +76,7 @@ const EmployeeDetail = ({ departments, getEmployees }) => {
                 employee={employee}
                 onEmployeeUpdated={handleEmployeeUpdated}
                 departments={departments}
+                locations={locations}
                 getEmployees={getEmployees}
                 isManager={departments.filter(d => d.id === employee.department_id)[0]?.manager_id === employee.id}
             />

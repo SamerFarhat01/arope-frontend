@@ -10,22 +10,26 @@ import NavBar from './components/NavBar/NavBar';
 import BlankPage from './components/BlankPage/BlankPage';
 import Departments from './components/Departments/Departments';
 import Logs from './components/Logs/Logs';
+import Locations from './components/Locations/Locations';
 import LeavesPage from './components/LeavesPage/LeavesPage';
 import ManagerLeaveRequests from './components/ManagerLeaveRequests/ManagerLeaveRequests';
 import HolidayForm from './components/HolidayForm/HolidayForm';
 import { jwtDecode } from 'jwt-decode';
 import HRSharedCalendar from './components/HRSharedCalendar/HRSharedCalendar';
 import LeaveSummaryPage from './components/LeaveSummaryPage/LeaveSummaryPage';
+import FirstApprovalRequests from './components/FirstApprover/FirstApprover';
 
 function App() {
     const [employees, setEmployees] = useState([]);
     const [departments, setDepartments] = useState([]);
+    const [locations, setLocations] = useState([]);
     const [department, setDepartment] = useState('');
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isHr, setIsHr] = useState(false);
     const [isManager, setIsManager] = useState(false);
+    const [isFirstApprover, setIsFirstApprover] = useState(false);
     const [token, setToken] = useState("");
     const [userId, setUserId] = useState(null);
 
@@ -78,11 +82,20 @@ function App() {
                 headers: { Authorization: `Bearer ${getCookie("access_token")}` },
             });
             console.log("Employees data:", response.data);
-            setEmployees(response.data.map(e => Object.assign(e, { "manager_full_name": e.manager_first_name != null ? e.manager_first_name + " " + e.manager_last_name : "None" })));
+            
+            // Map the response to include full_name and manager_full_name
+            const employeesWithNames = response.data.map(e => ({
+                ...e,
+                full_name: `${e.first_name} ${e.last_name}`,  // Combine first and last name
+                manager_full_name: e.manager_full_name != null ? e.manager_full_name : "None"
+            }));
+            
+            setEmployees(employeesWithNames);
         } catch (error) {
             console.error('Error fetching employees:', error);
         }
     };
+    
 
     const fetchDepartments = async () => {
         try {
@@ -93,15 +106,27 @@ function App() {
             console.error('Error fetching departments:', error);
         }
     };
+    const fetchLocations = async () => {
+        try {
+            const response = await Axios.get("http://localhost:5000/location", {
+                headers: { Authorization: `Bearer ${getCookie('access_token')}` },
+            });
+            setLocations(response.data);
+        } catch (error) {
+            console.error('Error fetching locations:', error);
+        }
+    }
 
     useEffect(() => {
         if (isAuthenticated) {
             getEmployees();
             getUser();
             fetchDepartments();
+            fetchLocations();
             let token = getCookie("access_token");
             setIsHr(jwtDecode(token).is_hr);
             setIsManager(jwtDecode(token).is_manager);
+            setIsFirstApprover(jwtDecode(token).is_first_approver); 
             console.log("Token decoded:", jwtDecode(token));
         } else {
             let token = getCookie("access_token");
@@ -111,18 +136,20 @@ function App() {
             if (token != null && token !== '') {
                 setIsHr(jwtDecode(token).is_hr);
                 setIsManager(jwtDecode(token).is_manager);
+                setIsFirstApprover(jwtDecode(token).is_first_approver);
                 console.log("Token decoded:", jwtDecode(token));
 
                 if (token != null) {
                     getEmployees();
                     fetchDepartments();
+                    fetchLocations();
                 }
             }
         }
     }, [isAuthenticated]);
 
-    const handleLoginSuccess = (token, userDepartment, userFirstName, userLastName, isHr, isManager) => {
-        console.log('Login success:', token, userDepartment, userFirstName, userLastName, isHr, isManager);
+    const handleLoginSuccess = (token, userDepartment, userFirstName, userLastName, isHr, isManager, isFirstApprover) => {
+        console.log('Login success:', token, userDepartment, userFirstName, userLastName, isHr, isManager, isFirstApprover);
         let expires = new Date();
         expires.setTime(expires.getTime() + 300000000);
         document.cookie = `access_token=${token}`;
@@ -131,6 +158,7 @@ function App() {
         setLastName(userLastName);
         setIsHr(isHr);
         setIsManager(isManager);
+        setIsFirstApprover(isFirstApprover);
         window.location.href = "/";
     };
 
@@ -154,7 +182,11 @@ function App() {
                         <>
                             <Route
                                 path="/"
-                                element={<BlankPage isHr={isHr} isManager={isManager} isEmployee={!isHr && !isManager} />}
+                                element={<BlankPage isHr={isHr} isManager={isManager} isEmployee={!isHr && !isManager} isFirstApprover={isFirstApprover}/>}
+                            />
+                            <Route
+                                path="/first-approval-requests"
+                                element={isFirstApprover ? <FirstApprovalRequests token={token} /> : <Navigate to="/" />}
                             />
                             <Route
                                 path="/employees"
@@ -165,7 +197,7 @@ function App() {
                             <Route
                                 path="/employee/:id"
                                 element={
-                                    <EmployeeDetail departments={departments} getEmployees={getEmployees} />
+                                    <EmployeeDetail departments={departments} locations={locations} getEmployees={getEmployees} />
                                 }
                             />
                             <Route
@@ -178,11 +210,15 @@ function App() {
                             />
                             <Route
                                 path="/staff"
-                                element={<EmployeeTable token={token} employees={employees} getEmployees={getEmployees} deleteEmployee={deleteEmployee} departments={departments} setEmployees={setEmployees} />}
+                                element={<EmployeeTable token={token} locations = {locations} employees={employees} getEmployees={getEmployees} deleteEmployee={deleteEmployee} departments={departments} setEmployees={setEmployees} />}
                             />
                             <Route
                                 path="/logs"
                                 element={<Logs token={token} />}
+                            />
+                            <Route
+                                path="/locations"
+                                element={<Locations token={token} />}
                             />
                             <Route
                                 path="/holiday-form"

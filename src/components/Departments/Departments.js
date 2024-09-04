@@ -11,6 +11,7 @@ const Departments = ({ token }) => {
     const [openEditDialog, setOpenEditDialog] = useState(false);
     const [newDepartmentName, setNewDepartmentName] = useState('');
     const [newManagerId, setNewManagerId] = useState(null);
+    const [supervisorId, setSupervisorId] = useState(null);
     const [selectedDepartment, setSelectedDepartment] = useState(null);
     const [error, setError] = useState('');
 
@@ -48,7 +49,7 @@ const Departments = ({ token }) => {
 
         try {
             const hrUser = getCookie('user_id'); // Retrieve the HR user ID from cookie
-            const response = await Axios.post('http://localhost:5000/departments', { name: newDepartmentName, manager_id: newManagerId, hrUser }, {
+            const response = await Axios.post('http://localhost:5000/departments', { name: newDepartmentName, manager_id: newManagerId,supervisor_id: supervisorId, hrUser }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -58,6 +59,7 @@ const Departments = ({ token }) => {
 
             setNewDepartmentName('');
             setNewManagerId('');
+            setSupervisorId('');
             handleCloseAdd();
         } catch (error) {
             console.error('Error adding department:', error);
@@ -110,7 +112,8 @@ const Departments = ({ token }) => {
                     columns={[
                         { field: 'id', headerName: 'Department ID', width: 300 },
                         { field: 'name', headerName: 'Department Name', width: 300 },
-                        { field: 'manager_id', headerName: 'Manager ID', width: 300 }
+                        { field: 'manager_id', headerName: 'Manager ID', width: 300 },
+                        { field: 'supervisor_id', headerName: 'Supervisor ID', width: 300 },
                     ]}
                     pageSize={10}
                     onRowClick={handleRowClick}
@@ -144,6 +147,14 @@ const Departments = ({ token }) => {
                         fullWidth
                         value={newManagerId}
                         onChange={(e) => setNewManagerId(e.target.value)}
+                        autoComplete="off"
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Supervisor ID"
+                        fullWidth
+                        value={supervisorId}
+                        onChange={(e) => setSupervisorId(e.target.value)}
                         autoComplete="off"
                     />
                 </DialogContent>
