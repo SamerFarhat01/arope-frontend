@@ -2,12 +2,16 @@ import React, { useState, useEffect } from 'react';
 import Axios from 'axios';
 import './EditEmployeeModal.css';
 
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
+
 const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, departments, isManager, locations }) => {
     const [initialEmployeeData, setInitialEmployeeData] = useState({});
+    const [id, setId] = useState(null);
     const [firstName, setFirstName] = useState('');
     const [middleName, setMiddleName] = useState('');
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
+    const [days, setDays] = useState(0);
     const [departmentName, setDepartmentName] = useState('');
     const [departmentId, setDepartmentId] = useState('');
     const [department, setDepartment] = useState(null);
@@ -38,7 +42,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
 
     const fetchManager = async (departmentId) => {
         try {
-            const response = await Axios.get(`http://localhost:5000/manager/${departmentId}`, {
+            const response = await Axios.get(`${baseUrl}/manager/${departmentId}`, {
                 headers: { Authorization: `Bearer ${getCookie('access_token')}` },
             });
             setManager(response.data);
@@ -50,7 +54,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
 
     const fetchNonDepartmentManagers = async () => {
         try {
-            const response = await Axios.get(`http://localhost:5000/managers-of-managers`, {
+            const response = await Axios.get(`${baseUrl}/managers-of-managers`, {
                 headers: { Authorization: `Bearer ${getCookie('access_token')}` },
             });
             setManagersOfManagers(response.data.filter(mom => mom.id != employee.id));
@@ -63,10 +67,12 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
     useEffect(() => {
         if (employee) {
             const initialData = {
+                id:employee.id,
                 firstName: employee.first_name,
                 middleName: employee.middle_name,
                 lastName: employee.last_name,
                 email: employee.email,
+                days: employee.days,
                 departmentName: employee.department_name,
                 departmentId: departments.filter(d => d.name === employee.department_name)[0]?.id,
                 managerName: employee.manager_first_name ? `${employee.manager_first_name} ${employee.manager_last_name}` : "None",
@@ -76,10 +82,12 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
             };
 
             setInitialEmployeeData(initialData);
+            setId(initialData.id)
             setFirstName(initialData.firstName);
             setMiddleName(initialData.middleName);
             setLastName(initialData.lastName);
             setEmail(initialData.email);
+            setDays(initialData.days)
             setDepartmentName(initialData.departmentName);
             setDepartmentId(initialData.departmentId);
             setDepartment(departments.filter(d => d.name === employee.department_name)[0]);
@@ -105,15 +113,17 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
         e.preventDefault();
         try {
             const updatedEmployee = {
+                id,
                 firstName,
                 middleName,
                 lastName,
                 email,
+                days,
                 departmentId,
                 managerId,
                 locationId
             };
-            await Axios.patch(`http://localhost:5000/employee/${employee.id}`, updatedEmployee, {
+            await Axios.patch(`${baseUrl}/employee/${employee.id}`, updatedEmployee, {
                 headers: { Authorization: `Bearer ${getCookie('access_token')}` }
             });
             onEmployeeUpdated();
@@ -122,12 +132,12 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
             console.error('Error updating employee:', error);
         }
     };
-
     const handleClose = () => {
         setFirstName(initialEmployeeData.firstName);
         setMiddleName(initialEmployeeData.middleName);
         setLastName(initialEmployeeData.lastName);
         setEmail(initialEmployeeData.email);
+        setDays(initialEmployeeData.days)
         setDepartmentName(initialEmployeeData.departmentName);
         setDepartmentId(initialEmployeeData.departmentId);
         setManagerName(initialEmployeeData.managerName);
@@ -151,7 +161,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
     }, [])
 
     if (!isOpen) return null;
-    console.log("locations: "+locationId)
+    console.log("locations: "+locations)
 
     return (
         <div className="modal-overlay">
@@ -174,6 +184,10 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
                     <div>
                         <label>Email:</label>
                         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                    </div>
+                    <div>
+                        <label>Days:</label>
+                        <input type="number" value={days} onChange={(e) => setDays(e.target.value)} required />
                     </div>
                     {
                         isManager ?

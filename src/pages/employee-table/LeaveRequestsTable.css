@@ -1,7 +1,7 @@
 .leave-requests-container {
     padding: 20px;
     margin: 0 auto;
-    max-width: 1200px; /* Adjust the max-width as needed */
+    max-width: 1700px; /* Adjust the max-width as needed */
 }
 
 .title {
@@ -74,4 +74,3 @@
     border: none;
     cursor: pointer;
 }
-

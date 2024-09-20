@@ -18,6 +18,9 @@ import { jwtDecode } from 'jwt-decode';
 import HRSharedCalendar from './components/HRSharedCalendar/HRSharedCalendar';
 import LeaveSummaryPage from './components/LeaveSummaryPage/LeaveSummaryPage';
 import FirstApprovalRequests from './components/FirstApprover/FirstApprover';
+import HRLeaveRequests from './components/HRLeaveRequests/HRLeaveRequests';
+
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
 
 function App() {
     const [employees, setEmployees] = useState([]);
@@ -51,7 +54,7 @@ function App() {
 
     const deleteEmployee = async (id) => {
         try {
-            const res = await Axios.delete(`http://localhost:5000/employee/${id}`, {
+            const res = await Axios.delete(`${baseUrl}/employee/${id}`, {
                 headers: { Authorization: `Bearer ${getCookie("access_token")}` },
             });
             setEmployees(employees.filter(e => e.id !== id));
@@ -65,7 +68,7 @@ function App() {
         let id = jwtDecode(token).id;
         setUserId(id);
         try {
-            const response = await Axios.get(`http://localhost:5000/employee/${id}`, {
+            const response = await Axios.get(`${baseUrl}/employee/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             console.log("User data:", response.data);
@@ -78,7 +81,7 @@ function App() {
 
     const getEmployees = async () => {
         try {
-            const response = await Axios.get('http://localhost:5000/employee', {
+            const response = await Axios.get(`${baseUrl}/employee`, {
                 headers: { Authorization: `Bearer ${getCookie("access_token")}` },
             });
             console.log("Employees data:", response.data);
@@ -99,7 +102,7 @@ function App() {
 
     const fetchDepartments = async () => {
         try {
-            const response = await Axios.get('http://localhost:5000/departments');
+            const response = await Axios.get(`${baseUrl}/departments`);
             console.log("Departments data:", response.data);
             setDepartments(response.data);
         } catch (error) {
@@ -108,7 +111,7 @@ function App() {
     };
     const fetchLocations = async () => {
         try {
-            const response = await Axios.get("http://localhost:5000/location", {
+            const response = await Axios.get(`${baseUrl}/location`, {
                 headers: { Authorization: `Bearer ${getCookie('access_token')}` },
             });
             setLocations(response.data);
@@ -231,6 +234,11 @@ function App() {
                             <Route
                                 path="/manager-leave-requests"
                                 element={<ManagerLeaveRequests token={token} />}
+                                
+                            />
+                            <Route
+                                path="/hr-leave-requests"
+                                element={<HRLeaveRequests token={token} />}
                                 
                             />
                             <Route

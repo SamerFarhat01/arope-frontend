@@ -3,14 +3,11 @@
 .leave-requests-container {
     position: relative;
     padding: 20px;
-    height: calc(100vh - 150px);
-    box-sizing: border-box;
+    
 }
 
 .data-grid-container {
     margin-top: 20px;
-    height: calc(100% - 120px);
-
 }
 
 .MuiDataGrid-root {
@@ -47,28 +44,4 @@
     width: 600px;
     max-width: 100%;
     margin: 50px auto;
-}
-.event-list {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 20px;
-    margin-top: 20px;
-}
-
-.event-list h2 {
-    margin-top: 0;
-}
-
-.event-list ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-.event-list li {
-    background: #3174ad;
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 5px;
 }

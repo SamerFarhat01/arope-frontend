@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Button } from '@mui/material';
 import Axios from 'axios';
 
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
+
 const EditLocationModal = ({ isOpen, onClose, location, onLocationUpdated, token }) => {
     const [locationName, setLocationName] = useState('');
     const [branchManagerId, setBranchManagerId] = useState('');
@@ -35,7 +37,7 @@ const EditLocationModal = ({ isOpen, onClose, location, onLocationUpdated, token
             const hrUser = getCookie('user_id'); // Retrieve the HR user ID from cookie
             const updateData = { location_name: locationName, branch_manager_id: branchManagerId === '' ? null : branchManagerId, hrUser };
 
-            await Axios.patch(`http://localhost:5000/locations/${location.id}`, updateData, {
+            await Axios.patch(`${baseUrl}/locations/${location.id}`, updateData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             onLocationUpdated();

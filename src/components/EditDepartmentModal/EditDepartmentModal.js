@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Button } from '@mui/material';
 import Axios from 'axios';
 
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
+
 const EditDepartmentModal = ({ isOpen, onClose, department, onDepartmentUpdated, token }) => {
     const [name, setName] = useState('');
     const [managerId, setManagerId] = useState('');
@@ -42,7 +44,7 @@ const EditDepartmentModal = ({ isOpen, onClose, department, onDepartmentUpdated,
                 updateData.manager_id = managerId;
             }
 
-            await Axios.patch(`http://localhost:5000/departments/${department.id}`, updateData, {
+            await Axios.patch(`${baseUrl}/departments/${department.id}`, updateData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             onDepartmentUpdated();
@@ -140,7 +142,7 @@ export default EditDepartmentModal;
 //         e.preventDefault();
 //         try {
 //             const hrUser = getCookie('user_id'); // Retrieve the HR user ID from cookie
-//             await Axios.patch(`http://localhost:5000/departments/${department.id}`, { name, manager_id: managerId, hrUser }, {
+//             await Axios.patch(`${baseUrl}/departments/${department.id}`, { name, manager_id: managerId, hrUser }, {
 //                 headers: { Authorization: `Bearer ${token}` }
 //             });
 //             onDepartmentUpdated();

@@ -3,25 +3,20 @@ import Axios from 'axios';
 import DatePicker, { Calendar } from 'react-multi-date-picker';
 import 'react-multi-date-picker/styles/colors/teal.css';
 import 'react-multi-date-picker/styles/layouts/prime.css';
-import './AddLeaveRequestModal.css';
+import './HRAddRequest.css';
 import moment from 'moment';
 
 const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
 
-const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employees, departments, employeeId, leaveRequests = [], editingRequest }) => {
+const HRAddRequest = ({ isOpen, onClose, employeeId, refreshData, token }) => {
     const [requestType] = useState('Leave Request');
     const [typeOfLeave, setTypeOfLeave] = useState('');
     const [leaveDetails, setLeaveDetails] = useState([]);
     const [selectedDates, setSelectedDates] = useState([]);
     const [unavailableDates, setUnavailableDates] = useState([]);
     const [holidayDates, setHolidayDates] = useState([]);
-    const [previousSickLeaveDays, setPreviousSickLeaveDays] = useState(0);
-    const [remainingTimeOffMinutes, setRemainingTimeOffMinutes] = useState(120); 
-    const [remainingBalance, setRemainingBalance] = useState(0);
-    const [previousUnpaidLeaveDays, setPreviousUnpaidLeaveDays] = useState(0);
-    const [daysToBeConsumedByJune30, setDaysToBeConsumedByJune30] = useState(0);
     const [employeeInfo, setEmployeeInfo] = useState([]);
-    const [attachment, setAttachment] = useState(null)
+
 
     useEffect(() => {
         const getUnavailableDates = async () => {
@@ -56,88 +51,15 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
     }, [employeeId, token]);
 
     useEffect(() => {
-            const updatedLeaveDetails = selectedDates.map(date => {
-                const formattedDate = moment(date.toDate()).format('YYYY-MM-DD');
-                const existing = leaveDetails.find(detail => detail.date === formattedDate);
-                return existing ? existing : { date: formattedDate, duration: '', time: '', start_time: '', end_time: '' };
-            });
-            setLeaveDetails(updatedLeaveDetails);
+        const updatedLeaveDetails = selectedDates.map(date => {
+            const formattedDate = moment(date.toDate()).format('YYYY-MM-DD');
+            const existing = leaveDetails.find(detail => detail.date === formattedDate);
+            return existing ? existing : { date: formattedDate, duration: '', time: '', start_time: '', end_time: '' };
+        });
+        setLeaveDetails(updatedLeaveDetails);
     }, [selectedDates]);
 
-    useEffect(() => {
-        const getPreviousSickLeaveDays = async () => {
-            try {
-                const response = await Axios.get(`${baseUrl}/previous-sick-leave-days/${employeeId}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setPreviousSickLeaveDays(parseFloat(response.data.total) || 0);
-            } catch (error) {
-                console.error('Error fetching previous sick leave days:', error);
-            }
-        };
-
-        const getRemainingTimeOff = async () => {
-            try {
-                const response = await Axios.get(`${baseUrl}/remaining-timeoff/${employeeId}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setRemainingTimeOffMinutes(response.data.remainingMinutes);
-            } catch (error) {
-                console.error('Error fetching remaining time off:', error);
-            }
-        };
-
-        const getRemainingBalance = async () => {
-            try {
-                const response = await Axios.get(`${baseUrl}/employee/${employeeId}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                const employeeData = response.data
-                setEmployeeInfo(employeeData)
-                                // Calculate service years
-                const startMoment = moment(employeeData.start_date);
-                const currentMoment = moment();
-                const yearsOfService = currentMoment.diff(startMoment, 'years');
-                
-                                // Calculate leave days per year based on service years and manager status
-                let leaveDaysPerYear = 15;
-                if (employeeData.is_manager) {
-                    leaveDaysPerYear = 21;
-                } else if (yearsOfService >= 15) {
-                    leaveDaysPerYear = 21;
-                } else if (yearsOfService >= 5) {
-                    leaveDaysPerYear = 18;
-                }
-                
-                                // Calculate days to be consumed by June 30
-                const daysToBeConsumed = employeeData.days - (leaveDaysPerYear * 2);
-                    if (daysToBeConsumed > 0) {
-                        setDaysToBeConsumedByJune30(daysToBeConsumed);
-                }
-                setRemainingBalance(response.data.days);
-
-            } catch (error) {
-                console.error('Error fetching remaining balance:', error);
-            }
-        };
-
-        const getPreviousUnpaidLeaveDays = async () => {
-            try {
-                const response = await Axios.get(`${baseUrl}/previous-unpaid-leave-days/${employeeId}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setPreviousUnpaidLeaveDays(parseFloat(response.data.total) || 0);
-            } catch (error) {
-                console.error('Error fetching previous unpaid leave days:', error);
-            }
-        };
-
-        getPreviousSickLeaveDays();
-        getRemainingTimeOff();
-        getRemainingBalance();
-        getPreviousUnpaidLeaveDays();
-    }, [employeeId, token]);
-
+    
     const handleDurationChange = (date, duration) => {
         const formattedDate = moment(date).format('YYYY-MM-DD');
         if (
@@ -194,67 +116,24 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
             return !isNaN(duration) ? total + duration : total;
         }, 0);
 
-        const totalRequestedSick = parseFloat(previousSickLeaveDays) + quantity;
-        const totalRequestedUnpaid = parseFloat(previousUnpaidLeaveDays) + quantity;
-
-        if (typeOfLeave === 'Sick Leave Allowed' && totalRequestedSick > 2) {
-            alert('The total days allowed for sick leaves without a medical report has been exceeded, please change request type');
-            return;
-        }
-
-        if (typeOfLeave === 'Unpaid Leave' && totalRequestedUnpaid > 5) {
-            alert('The total days allowed for unpaid leave has been exceeded, please change request type');
-            return;
-        }
-
-        if (typeOfLeave === 'Personal Time Off') {
-            const totalMinutesRequested = leaveDetails.reduce((total, detail) => {
-                const startTime = moment(detail.start_time, 'HH:mm');
-                const endTime = moment(detail.end_time, 'HH:mm');
-                const duration = endTime.diff(startTime, 'minutes');
-                return total + duration;
-            }, 0);
-
-            if (totalMinutesRequested > remainingTimeOffMinutes) {
-                alert('The total hours allowed for this month exceeded, please change request type');
-                return;
-            }
-        }
-
         const req = {
             employeeId,
             typeOfLeave,
             quantity,
             leaveDetails
         };
-
-        const formData = new FormData();
-        formData.append('employeeId', employeeId);
-        formData.append('typeOfLeave', typeOfLeave);
-        formData.append('quantity', quantity);
-        formData.append('leaveDetails', JSON.stringify(leaveDetails));
-        if (attachment) {
-            formData.append('attachment', attachment); // Add the attachment if available
-        }
-
         try {
-            if (editingRequest) {
-                const response = await Axios.patch(`${baseUrl}/leave-requests/${editingRequest.id}/edit`, req, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                console.log("Leave request update response:", response.data);
-            } else {
-                const response = await Axios.post(`${baseUrl}/leave-requests`, formData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                console.log("Leave request response:", response.data);
-            }
-
-            onRequestAdded();
+            await Axios.post(`${baseUrl}/leave-requests/hr`, req, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setLeaveDetails([]);
             onClose();
+            refreshData();
+            setTypeOfLeave('')
         } catch (error) {
-            console.error('Error adding/updating leave request:', error.response ? error.response.data : error.message);
+            console.error('Error submitting leave transaction:', error);
         }
+
     };
 
     const getDayClass = (date) => {
@@ -307,12 +186,7 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
     const handleTypeOfLeaveChange = (e) => {
         const selectedType = e.target.value;
     
-        // Check if the selected type is "Unpaid Leave" and if there is a remaining balance
-        if (selectedType === 'Unpaid Leave' && remainingBalance > 0) {
-            alert('You can only request unpaid leave if your balance is zero.');
-            return;
-        }
-    
+
         setTypeOfLeave(selectedType);
     
         // If a special leave type is selected and dates are chosen
@@ -321,11 +195,6 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
             setLeaveDetails([]);
         }
     };
-
-    const handleFileChange = (e) => {
-        const selectedFile = e.target.files[0]
-        setAttachment(selectedFile)
-    }
     
     
 
@@ -345,31 +214,12 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
                         <label>Type of Leave:</label>
                         <select value={typeOfLeave} onChange={handleTypeOfLeaveChange} required>
                             <option value="">Select Type</option>
-                            <option value="Annual Paid Leave">Annual Paid Leave</option>
-                            <option value="Sick Leave With Medical Report">Sick Leave With Medical Meport</option>
-                            <option value="Unpaid Leave">Unpaid Leave</option>
-                            <option value="Sick Leave Allowed">Sick Leave Allowed</option>
-                            <option value="Personal Time Off">Personal Time Off</option>
-                            <option value="Compassionate">Compassionate</option>
+                            <option value="Condolences">Compassionate</option>
                             <option value="Marital">Marital</option>
                             <option value="Maternity">Maternity</option>
                             <option value="Paternity">Paternity</option>
                         </select>
                     </div>
-                    <p className='ptoStatement'>Remaining Personal Time Off (minutes): {remainingTimeOffMinutes}</p>
-                    <p>Remaining Sick Leave Allowed (days): {2 - previousSickLeaveDays}</p>
-                    {remainingBalance == 0.0 && (
-                        <p>Remaining Unpaid Leaves (days): {5 - previousUnpaidLeaveDays}</p>
-                    )}
-                    {daysToBeConsumedByJune30 > 0 && (
-                        <p className='daysToBeConsumed'><b>Days to be consumed by June 30: </b>{daysToBeConsumedByJune30}</p>
-                    )}
-                    {(typeOfLeave === 'Compassionate' || typeOfLeave === 'Sick Leave With Medical Report') && (
-                        <div className='form-group'>
-                            <label>Upload Attachment</label>
-                            <input type="file" accept="image/*" onChange={handleFileChange} required/>
-                        </div>
-                    )}
                     <div className="form-group">
                         <label>Dates:</label>
                         <Calendar
@@ -445,7 +295,7 @@ const AddLeaveRequestModal = ({ token, isOpen, onClose, onRequestAdded, employee
             </div>
         </div>
     );
-};
 
-export default AddLeaveRequestModal;
+}
 
+export default HRAddRequest;

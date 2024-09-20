@@ -6,6 +6,8 @@ import 'react-multi-date-picker/styles/layouts/prime.css';
 import moment from 'moment';
 import './LeaveDaysModal.css';
 
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
+
 const LeaveDaysModal = ({ isOpen, onClose, employeeId, actionType, refreshData, token }) => {
     const [reason, setReason] = useState('');
     const [leaveDetails, setLeaveDetails] = useState([]);
@@ -15,7 +17,7 @@ const LeaveDaysModal = ({ isOpen, onClose, employeeId, actionType, refreshData, 
     useEffect(() => {
         const getUnavailableDates = async () => {
             try {
-                const response = await Axios.get(`http://localhost:5000/unavailable-dates/${employeeId}`, {
+                const response = await Axios.get(`${baseUrl}/unavailable-dates/${employeeId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setUnavailableDates(response.data);
@@ -84,7 +86,7 @@ const LeaveDaysModal = ({ isOpen, onClose, employeeId, actionType, refreshData, 
         };
 
         try {
-            await Axios.post('http://localhost:5000/leave-requests/hr', req, {
+            await Axios.post(`${baseUrl}/leave-requests/hr`, req, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setReason('');

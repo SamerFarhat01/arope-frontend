@@ -5,6 +5,8 @@ import { DataGrid } from '@mui/x-data-grid';
 import EditDepartmentModal from '../EditDepartmentModal/EditDepartmentModal';
 import './Departments.css';
 
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
+
 const Departments = ({ token }) => {
     const [departments, setDepartments] = useState([]);
     const [openAddDialog, setOpenAddDialog] = useState(false);
@@ -18,7 +20,7 @@ const Departments = ({ token }) => {
     useEffect(() => {
         const fetchDepartments = async () => {
             try {
-                const response = await Axios.get('http://localhost:5000/departments', {
+                const response = await Axios.get(`${baseUrl}/departments`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setDepartments(response.data);
@@ -49,7 +51,7 @@ const Departments = ({ token }) => {
 
         try {
             const hrUser = getCookie('user_id'); // Retrieve the HR user ID from cookie
-            const response = await Axios.post('http://localhost:5000/departments', { name: newDepartmentName, manager_id: newManagerId,supervisor_id: supervisorId, hrUser }, {
+            const response = await Axios.post(`${baseUrl}/departments`, { name: newDepartmentName, manager_id: newManagerId,supervisor_id: supervisorId, hrUser }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -89,7 +91,7 @@ const Departments = ({ token }) => {
 
     const handleDepartmentUpdated = async () => {
         try {
-            const response = await Axios.get('http://localhost:5000/departments', {
+            const response = await Axios.get(`${baseUrl}/departments`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setDepartments(response.data);
@@ -110,10 +112,12 @@ const Departments = ({ token }) => {
                 <DataGrid
                     rows={departments}
                     columns={[
-                        { field: 'id', headerName: 'Department ID', width: 300 },
-                        { field: 'name', headerName: 'Department Name', width: 300 },
-                        { field: 'manager_id', headerName: 'Manager ID', width: 300 },
-                        { field: 'supervisor_id', headerName: 'Supervisor ID', width: 300 },
+                        { field: 'id', headerName: 'Department ID', flex: 0.5, align: 'center', headerAlign: 'center'},
+                        { field: 'name', headerName: 'Department Name', flex: 1, align: 'center', headerAlign: 'center'},
+                        { field: 'manager_id', headerName: 'Manager ID', flex: 0.5, align: 'center', headerAlign: 'center'},
+                        { field: 'manager_full_name', headerName: 'Manager Name', flex: 1, align: 'center', headerAlign: 'center'},
+                        { field: 'supervisor_id', headerName: 'Supervisor ID', flex: 0.5, align: 'center', headerAlign: 'center'},
+                        { field: 'supervisor_full_name', headerName: 'Supervisor Name', flex: 1, align: 'center', headerAlign: 'center'},
                     ]}
                     pageSize={10}
                     onRowClick={handleRowClick}

@@ -38,3 +38,9 @@
 .departments-table th {
     background-color: #f4f4f4;
 }
+.center-text{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}

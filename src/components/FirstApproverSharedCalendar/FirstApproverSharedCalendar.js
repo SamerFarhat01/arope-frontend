@@ -5,6 +5,8 @@ import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './FirstApproverSharedCalendar.css';
 
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
+
 const localizer = momentLocalizer(moment);
 
 const FirstApproverSharedCalendar = ({ token, onClose }) => {
@@ -15,12 +17,12 @@ const FirstApproverSharedCalendar = ({ token, onClose }) => {
     useEffect(() => {
         const fetchFirstApproverLeaves = async () => {
             try {
-                const response = await Axios.get('http://localhost:5000/first-approver-leaves', {
+                const response = await Axios.get(`${baseUrl}/first-approver-leaves`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
                 const filteredLeaves = response.data.filter(
-                    leave => leave.request_status !== 'Rejected' && leave.request_status !== 'Cancelled'
+                    leave => leave.request_status !== 'Rejected' && leave.request_status !== 'Cancelled' && !leave.request_status.includes('Pending')
                 );
 
                 const leaves = filteredLeaves.flatMap(leave => {

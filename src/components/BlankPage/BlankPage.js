@@ -52,6 +52,7 @@ const BlankPage = ({ isHr, isManager, isEmployee, isFirstApprover  }) => {
                         <MenuItem onClick={() => handleNavigate('/logs')}>Logs</MenuItem>
                         <MenuItem onClick={() => handleNavigate('/holiday-form')}>Holiday Form</MenuItem>
                         <MenuItem onClick={() => handleNavigate('/shared-calendar')}>Shared Calendar</MenuItem>
+                        <MenuItem onClick={() => handleNavigate('/hr-leave-requests')}>HR Leave Requests</MenuItem>
                     </>
                 )}
                 {isManager && (

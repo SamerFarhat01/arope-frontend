@@ -5,6 +5,8 @@ import { Button, Modal } from '@mui/material';
 import SharedCalendar from '../SharedCalendar/SharedCalendar';
 import './ManagerLeaveRequests.css';
 
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
+
 const ManagerLeaveRequests = ({ token }) => {
     const [leaveRequests, setLeaveRequests] = useState([]);
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -12,7 +14,7 @@ const ManagerLeaveRequests = ({ token }) => {
     useEffect(() => {
         const fetchLeaveRequests = async () => {
             try {
-                const response = await Axios.get('http://localhost:5000/manager-leave-requests', {
+                const response = await Axios.get(`${baseUrl}/manager-leave-requests`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const formattedRequests = response.data.map(request => ({
@@ -27,6 +29,7 @@ const ManagerLeaveRequests = ({ token }) => {
                         second: 'numeric',
                         hour12: true,
                     }),
+                    attachment: request.attachment,
                 }));
                 setLeaveRequests(formattedRequests);
             } catch (error) {
@@ -39,7 +42,7 @@ const ManagerLeaveRequests = ({ token }) => {
 
     const handleApprove = async (id) => {
         try {
-            await Axios.patch(`http://localhost:5000/leave-requests/${id}/approve`, {}, {
+            await Axios.patch(`${baseUrl}/leave-requests/${id}/approve`, {}, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setLeaveRequests(leaveRequests.map(req => req.id === id ? { ...req, requestStatus: 'Approved' } : req));
@@ -50,7 +53,7 @@ const ManagerLeaveRequests = ({ token }) => {
 
     const handleReject = async (id) => {
         try {
-            await Axios.patch(`http://localhost:5000/leave-requests/${id}/reject`, {}, {
+            await Axios.patch(`${baseUrl}/leave-requests/${id}/reject`, {}, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setLeaveRequests(leaveRequests.map(req => req.id === id ? { ...req, requestStatus: 'Rejected' } : req));
@@ -61,7 +64,7 @@ const ManagerLeaveRequests = ({ token }) => {
 
     const handleApproveCancel = async (id) => {
         try {
-            await Axios.patch(`http://localhost:5000/leave-requests/${id}/cancel-approve`, {}, {
+            await Axios.patch(`${baseUrl}/leave-requests/${id}/cancel-approve`, {}, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setLeaveRequests(leaveRequests.map(req => req.id === id ? { ...req, requestStatus: 'Cancelled' } : req));
@@ -72,7 +75,7 @@ const ManagerLeaveRequests = ({ token }) => {
 
     const handleRejectCancelRequest = async (id) => {
         try {
-            await Axios.patch(`http://localhost:5000/leave-requests/${id}/cancel-reject`, {}, {
+            await Axios.patch(`${baseUrl}/leave-requests/${id}/cancel-reject`, {}, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setLeaveRequests(leaveRequests.map(req => req.id === id ? { ...req, requestStatus: 'Approved' } : req));
@@ -89,6 +92,24 @@ const ManagerLeaveRequests = ({ token }) => {
         { field: 'quantity', headerName: 'Quantity', width: 100 },
         { field: 'time', headerName: 'Time', width: 200 },
         { field: 'dates', headerName: 'Dates', width: 200 },
+        {
+            field: 'attachment',
+            headerName: 'Attachment',
+            width:100,
+            renderCell: (params) => (
+                params.row.attachment ? (
+                    <a 
+                        href={`${baseUrl}/uploads/${params.row.attachment}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Download
+                    </a>
+                ) : (
+                    <span></span>
+                )
+            )
+        },
         {
             field: 'actions',
             headerName: '',

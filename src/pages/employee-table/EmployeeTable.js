@@ -39,17 +39,25 @@ const EmployeeTable = ({ token, employees, getEmployees, deleteEmployee, departm
     //     { field: 'days', headerName: 'Days', width: 100 } // New column for days
     // ];
     const columns = [
-        { field: 'full_name', headerName: 'Name', width: 150 },
-        { field: 'email', headerName: 'Email', width: 200 },
-        { field: 'department_name', headerName: 'Department', width: 150 },
-        { field: 'manager_full_name', headerName: 'Manager', width: 150 },
-        { field: 'location_name', headerName: 'Location', width: 100 },
-        { field: 'first_approver_name', headerName: 'First Approver', width: 200 },
-        { field: 'days', headerName: 'Days', width: 100 },
-        { field: 'leaves_taken', headerName: 'Leaves', width: 100 },
-        { field: 'sick_leaves_taken', headerName: 'Sick Leaves', width: 100 },
-        { field: 'start_date', headerName: 'Start Date', width: 150, renderCell: (params) => params.value ? new Date(params.value).toLocaleDateString('en-GB') : '' },
-        { field: 'end_date', headerName: 'End Date', width: 150, renderCell: (params) => params.value ? new Date(params.value).toLocaleDateString('en-GB') : '' },
+        { field: 'id', headerName: 'ID', width: 75, align: 'center', headerAlign: 'center' },
+        { field: 'full_name', headerName: 'Name', width: 150, align: 'center', headerAlign: 'center' },
+        { field: 'email', headerName: 'Email', width: 200, align: 'center', headerAlign: 'center' },
+        { field: 'department_name', headerName: 'Department', width: 150, align: 'center', headerAlign: 'center' },
+        { field: 'manager_full_name', headerName: 'Manager', width: 150, align: 'center', headerAlign: 'center' },
+        { field: 'location_name', headerName: 'Location', width: 100, align: 'center', headerAlign: 'center' },
+        { field: 'first_approver_name', headerName: 'First Approval', width: 200, align: 'center', headerAlign: 'center' },
+        // { field: 'leave_days_on_jan_1', headerName: 'Starting Balance', width: 150, align: 'center', headerAlign: 'center' },
+        { field: 'days', headerName: 'Balance', width: 100, align: 'center', headerAlign: 'center' },
+        { field: 'paid_leaves_taken', headerName: 'Paid Leave', width: 100, align: 'center', headerAlign: 'center' },
+        { field: 'sick_leaves_with_medical_report_taken', headerName: 'Sick/Report', width: 100, align: 'center', headerAlign: 'center' },
+        { field: 'sick_leaves_allowed_taken', headerName: 'Sick/Allowed', width: 100, align: 'center', headerAlign: 'center' },
+        { field: 'compassionate_taken', headerName: 'Compassionate', width: 150, align: 'center', headerAlign: 'center' },
+        { field: 'marital_taken', headerName: 'Marital', width: 100, align: 'center', headerAlign: 'center' },
+        { field: 'maternity_taken', headerName: 'Maternity', width: 100, align: 'center', headerAlign: 'center' },
+        { field: 'paternity_taken', headerName: 'Paternity', width: 100, align: 'center', headerAlign: 'center' },
+        { field: 'unpaid_leave_taken', headerName: 'Unpaid', width: 100, align: 'center', headerAlign: 'center' },
+        { field: 'start_date', headerName: 'Start Date', width: 150, renderCell: (params) => params.value ? new Date(params.value).toLocaleDateString('en-GB') : '', align: 'center', headerAlign: 'center' },
+        { field: 'end_date', headerName: 'End Date', width: 150, renderCell: (params) => params.value ? new Date(params.value).toLocaleDateString('en-GB') : '', align: 'center', headerAlign: 'center' },
     ];
     
     

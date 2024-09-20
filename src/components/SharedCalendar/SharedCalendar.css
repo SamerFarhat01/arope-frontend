@@ -17,7 +17,7 @@
     padding: 20px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     position: relative;
-    width: 70vw !important;
+    width: 90vw !important;
 }
 
 #calendar-overlay {
@@ -108,8 +108,14 @@
     color: black;
     border-radius: 8px;
     opacity: 0.8;
+    /* padding: 2px; */
 }
-
+.rbc-event-content{
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 .rbc-event.sick-leave {
     background-color: yellow; /* Example color for sick leave */
 }
@@ -161,4 +167,34 @@
 
 .rbc-agenda-date-cell, .rbc-agenda-event-cell {
     border: 1px solid lightgray;
+}
+.calendar-with-legend{
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.calendar-container{
+    width:87.5%;
+}
+.legend{
+    width: 10%;
+    background-color: #f5f5f5;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    height: fit-content;
+}
+.legend h4{
+    margin-bottom: 8px;
+    text-align: center;
+}
+/* .legend ul{
+    list-style-type: none;
+    padding-left: 0;
+} */
+.legend ul li{
+    font-size: 14px;
+    margin-bottom: 6px;
+    margin-top: 8px;
 }

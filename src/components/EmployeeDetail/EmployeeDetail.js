@@ -5,6 +5,8 @@ import './EmployeeDetail.css';
 import Axios from 'axios';
 import { Button } from '@mui/material';
 
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
+
 const EmployeeDetail = ({ departments, getEmployees, locations }) => {
     const [employee, setEmployee] = useState({});
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -25,7 +27,7 @@ const EmployeeDetail = ({ departments, getEmployees, locations }) => {
 
     const getEmployee = async () => {
         console.log(window.location.pathname.split("/")[2]);
-        const response = await Axios.get(`http://localhost:5000/employee/${window.location.pathname.split("/")[2]}`);
+        const response = await Axios.get(`${baseUrl}/employee/${window.location.pathname.split("/")[2]}`);
         setEmployee(response.data);
     };
 
@@ -53,6 +55,10 @@ const EmployeeDetail = ({ departments, getEmployees, locations }) => {
                     <tr>
                         <th>Email</th>
                         <td>{employee.email}</td>
+                    </tr>
+                    <tr>
+                        <th>Days</th>
+                        <td>{employee.days}</td>
                     </tr>
                     <tr>
                         <th>Department</th>
@@ -113,7 +119,7 @@ export default EmployeeDetail;
 
 //     const getEmployee = async () => {
 //         console.log(window.location.pathname.split("/")[2]);
-//         const response = await Axios.get(`http://localhost:5000/employee/${window.location.pathname.split("/")[2]}`);
+//         const response = await Axios.get(`${baseUrl}/employee/${window.location.pathname.split("/")[2]}`);
 //         setEmployee(response.data);
 //     };
 

@@ -5,6 +5,8 @@ import { DataGrid } from '@mui/x-data-grid';
 import './Locations.css';
 import EditLocationModal from '../EditLocationModal/EditLocationModal';
 
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
+
 const Locations = ({ token }) => {
     const [locations, setLocations] = useState([]);
     const [openAddDialog, setOpenAddDialog] = useState(false);
@@ -17,7 +19,7 @@ const Locations = ({ token }) => {
     useEffect(() => {
         const fetchLocations = async () => {
             try {
-                const response = await Axios.get('http://localhost:5000/location', {
+                const response = await Axios.get(`${baseUrl}/location`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setLocations(response.data);
@@ -47,7 +49,7 @@ const Locations = ({ token }) => {
         }
 
         try {
-            const response = await Axios.post('http://localhost:5000/location', { location_name: newLocationName, branch_manager_id: newBranchManagerId }, {
+            const response = await Axios.post(`${baseUrl}/location`, { location_name: newLocationName, branch_manager_id: newBranchManagerId }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -70,7 +72,7 @@ const Locations = ({ token }) => {
 
     const handleLocationUpdated = async () => {
         try {
-            const response = await Axios.get('http://localhost:5000/location', {
+            const response = await Axios.get(`${baseUrl}/location`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setLocations(response.data);
@@ -91,9 +93,10 @@ const Locations = ({ token }) => {
                 <DataGrid
                     rows={locations}
                     columns={[
-                        { field: 'id', headerName: 'Location ID', width: 300 },
-                        { field: 'location_name', headerName: 'Location Name', width: 300 },
-                        { field: 'branch_manager_id', headerName: 'Branch Manager ID', width: 300 },
+                        { field: 'id', headerName: 'Location ID', flex: 0.5, align: 'center', headerAlign: 'center' },
+                        { field: 'location_name', headerName: 'Location Name', flex: 0.5, align: 'center', headerAlign: 'center' },
+                        { field: 'branch_manager_id', headerName: 'Branch Manager ID', flex: 0.5, align: 'center', headerAlign: 'center' },
+                        { field: 'branch_manager_full_name', headerName: 'Branch Manager Name', flex: 0.5, align: 'center', headerAlign: 'center' },
                     ]}
                     pageSize={10}
                     autoHeight

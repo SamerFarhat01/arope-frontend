@@ -4,6 +4,8 @@ import './AddEmployeeModal.css';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
+
 const AddEmployeeModal = ({ token, isOpen, onClose, onEmployeeAdded, departments, locations }) => {
     const [id, setId] = useState('');
     const [firstName, setFirstName] = useState('');
@@ -36,7 +38,7 @@ const AddEmployeeModal = ({ token, isOpen, onClose, onEmployeeAdded, departments
 
     const fetchManager = async (departmentId) => {
         try {
-            const response = await Axios.get(`http://localhost:5000/manager/${departmentId}`, {
+            const response = await Axios.get(`${baseUrl}/manager/${departmentId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 }
@@ -91,7 +93,7 @@ const AddEmployeeModal = ({ token, isOpen, onClose, onEmployeeAdded, departments
         };
 
         try {
-            await Axios.post('http://localhost:5000/employee', newEmployee, {
+            await Axios.post(`${baseUrl}/employee`, newEmployee, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             onEmployeeAdded();
@@ -111,7 +113,7 @@ const AddEmployeeModal = ({ token, isOpen, onClose, onEmployeeAdded, departments
                 <form onSubmit={handleSubmit}>
                     <div>
                         <label>ID:</label>
-                        <input type="text" value={id} onChange={(e) => setId(e.target.value)} required />
+                        <input type="text" value={id} onChange={(e) => setId(parseInt(e.target.value))} required />
                     </div>
                     <div>
                         <label>First Name:</label>
@@ -218,7 +220,7 @@ export default AddEmployeeModal;
 
 //     const fetchManager = async (departmentId) => {
 //         try {
-//             const response = await Axios.get(`http://localhost:5000/manager/${departmentId}`, {
+//             const response = await Axios.get(`${baseUrl}/manager/${departmentId}`, {
 //                 headers: {
 //                     'Authorization': `Bearer ${token}`,
 //                 }
@@ -270,7 +272,7 @@ export default AddEmployeeModal;
 //         };
 
 //         try {
-//             await Axios.post('http://localhost:5000/employee', newEmployee, {
+//             await Axios.post(`${baseUrl}/employee', newEmployee, {
 //                 headers: { Authorization: `Bearer ${token}` }
 //             });
 //             onEmployeeAdded();

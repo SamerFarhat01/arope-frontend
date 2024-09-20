@@ -4,6 +4,8 @@ import { DataGrid } from '@mui/x-data-grid';
 import { Button, Modal } from '@mui/material';
 import FirstApproverSharedCalendar from '../FirstApproverSharedCalendar/FirstApproverSharedCalendar'; 
 
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
+
 const FirstApprovalRequests = ({ token }) => {
     const [requests, setRequests] = useState([]);
     const [isCalendarOpen, setIsCalendarOpen] = useState(false); // State to manage the modal open/close
@@ -11,7 +13,7 @@ const FirstApprovalRequests = ({ token }) => {
     useEffect(() => {
         const fetchRequests = async () => {
             try {
-                const response = await Axios.get('http://localhost:5000/first-approval-requests', {
+                const response = await Axios.get(`${baseUrl}/first-approval-requests`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const formattedRequests = response.data.map(request => ({
@@ -38,7 +40,7 @@ const FirstApprovalRequests = ({ token }) => {
 
     const handleApprove = async (id) => {
         try {
-            await Axios.patch(`http://localhost:5000/leave-requests/${id}/first-approve`, { action: 'approve' }, {
+            await Axios.patch(`${baseUrl}/leave-requests/${id}/first-approve`, { action: 'approve' }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setRequests(requests.filter(req => req.id !== id));
@@ -49,7 +51,7 @@ const FirstApprovalRequests = ({ token }) => {
 
     const handleReject = async (id) => {
         try {
-            await Axios.patch(`http://localhost:5000/leave-requests/${id}/first-approve`, { action: 'reject' }, {
+            await Axios.patch(`${baseUrl}/leave-requests/${id}/first-approve`, { action: 'reject' }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setRequests(requests.filter(req => req.id !== id));
@@ -59,20 +61,20 @@ const FirstApprovalRequests = ({ token }) => {
     };
 
     const columns = [
-        { field: 'employeeId', headerName: 'Employee ID', width: 100 },
-        { field: 'name', headerName: 'Name', width: 150 },
-        { field: 'typeOfLeave', headerName: 'Type of Leave', width: 250 },
-        { field: 'requestStatus', headerName: 'Request Status', width: 150 },
-        { field: 'quantity', headerName: 'Quantity', width: 100 },
-        { field: 'time', headerName: 'Time', width: 200 },
-        { field: 'dates', headerName: 'Dates', width: 200 },
+        { field: 'employeeId', headerName: 'Employee ID', flex: 0.5 },
+        { field: 'name', headerName: 'Name', flex: 1 },
+        { field: 'typeOfLeave', headerName: 'Type of Leave', flex: 1.5 },
+        { field: 'requestStatus', headerName: 'Request Status', flex: 1.5 },
+        { field: 'quantity', headerName: 'Quantity', flex: 1 },
+        { field: 'time', headerName: 'Time', flex: 1 },
+        { field: 'dates', headerName: 'Dates', flex: 1 },
         {
             field: 'actions',
             headerName: 'Actions',
-            width: 200,
+            flex: 1.5,
             renderCell: (params) => (
                 <>
-                    <Button variant="contained" color="success" onClick={() => handleApprove(params.row.id)}>
+                    <Button variant="contained" color="success" style={{ marginRight: 10 }} onClick={() => handleApprove(params.row.id)}>
                         Approve
                     </Button>
                     <Button variant="contained" color="error" onClick={() => handleReject(params.row.id)}>
@@ -81,7 +83,7 @@ const FirstApprovalRequests = ({ token }) => {
                 </>
             ),
         },
-        { field: 'lastModified', headerName: 'Last Modified', width: 200 },
+        { field: 'lastModified', headerName: 'Last Modified', flex: 1.5},
     ];
 
     return (
