@@ -4,7 +4,7 @@ import './EditEmployeeModal.css';
 
 const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
 
-const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, departments, isManager, locations }) => {
+const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, departments, isManager, locations, employees}) => {
     const [initialEmployeeData, setInitialEmployeeData] = useState({});
     const [id, setId] = useState(null);
     const [firstName, setFirstName] = useState('');
@@ -15,14 +15,12 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
     const [departmentName, setDepartmentName] = useState('');
     const [departmentId, setDepartmentId] = useState('');
     const [department, setDepartment] = useState(null);
-    const [manager, setManager] = useState([]);
     const [location, setLocation] = useState(null);
     const [locationId, setLocationId] = useState(null);
-    const [managerName, setManagerName] = useState('');
-    const [managerId, setManagerId] = useState([]);
-    const [managersOfManagers, setManagersOfManagers] = useState([]);
-    const [managerOfManagerId, setManagerOfManagerId] = useState(null);
-    const [managerOfManagerName, setManagerOfManagerName] = useState(null);
+    const [managerId, setManagerId] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('')
+    const [firstApproverId, setFirstApproverId] = useState(null);
+    
 
     function getCookie(cname) {
         let name = cname + "=";
@@ -40,28 +38,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
         return "";
       }
 
-    const fetchManager = async (departmentId) => {
-        try {
-            const response = await Axios.get(`${baseUrl}/manager/${departmentId}`, {
-                headers: { Authorization: `Bearer ${getCookie('access_token')}` },
-            });
-            setManager(response.data);
-            setManagerId(response.data?.id);
-        } catch (error) {
-            console.error('Error fetching managers:', error);
-        }
-    };
 
-    const fetchNonDepartmentManagers = async () => {
-        try {
-            const response = await Axios.get(`${baseUrl}/managers-of-managers`, {
-                headers: { Authorization: `Bearer ${getCookie('access_token')}` },
-            });
-            setManagersOfManagers(response.data.filter(mom => mom.id != employee.id));
-        } catch (error) {
-            console.error('Error fetching managers:', error);
-        }
-    }
 
 
     useEffect(() => {
@@ -75,10 +52,9 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
                 days: employee.days,
                 departmentName: employee.department_name,
                 departmentId: departments.filter(d => d.name === employee.department_name)[0]?.id,
-                managerName: employee.manager_first_name ? `${employee.manager_first_name} ${employee.manager_last_name}` : "None",
-                managerOfManagerId: employee.department_name == "Manager" ? employee.manager_id : null,
-                managerId: [],
-                locationName: employee.location_name
+                locationName: employee.location_name,
+                managerId: employee.manager_id,
+                firstApproverId: employee.first_approver_id
             };
 
             setInitialEmployeeData(initialData);
@@ -91,23 +67,19 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
             setDepartmentName(initialData.departmentName);
             setDepartmentId(initialData.departmentId);
             setDepartment(departments.filter(d => d.name === employee.department_name)[0]);
-            setManagerOfManagerId(initialData.managerOfManagerId);
-            setManagerOfManagerName(initialData.managerName);
             setLocation(initialData.locationName);
             setLocationId(locations?.filter(loc => loc.location_name == initialData.locationName)[0]?.id)
+            setManagerId(initialData.managerId)
+            setFirstApproverId(initialData.firstApproverId)
         }
     }, [employee, departments, locations]);
 
-    useEffect(() => {
-        fetchManager(departmentId);
-    }, [departmentId]);
 
     function changeDepartment(id) {
         setDepartmentId(id);
         setDepartment(departments.filter(d => d.id === id)[0]);
     }
-    console.log(departments)
-    console.log(locations)
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -121,6 +93,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
                 days,
                 departmentId,
                 managerId,
+                firstApproverId,
                 locationId
             };
             await Axios.patch(`${baseUrl}/employee/${employee.id}`, updatedEmployee, {
@@ -132,6 +105,11 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
             console.error('Error updating employee:', error);
         }
     };
+const filteredEmployees = employees.filter(emp => 
+        emp.first_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        emp.last_name.toLowerCase().includes(searchTerm.toLowerCase()) 
+    )
+
     const handleClose = () => {
         setFirstName(initialEmployeeData.firstName);
         setMiddleName(initialEmployeeData.middleName);
@@ -140,13 +118,11 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
         setDays(initialEmployeeData.days)
         setDepartmentName(initialEmployeeData.departmentName);
         setDepartmentId(initialEmployeeData.departmentId);
-        setManagerName(initialEmployeeData.managerName);
+        setManagerId(initialEmployeeData.managerId);
+        setFirstApproverId(initialEmployeeData.firstApproverId)
         onClose();
     };
 
-    const changeManagerOfManager = (id) => {
-        (id == "None") ? setManagerId(null) : setManagerId(id)
-    }
 
     const changeLocation = (id) => {
         console.log("Location ID: ", id)
@@ -156,13 +132,9 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
         setLocation(selectedLocation.location_name);
     }
 
-    useEffect(() => {
-        fetchNonDepartmentManagers()
-    }, [])
 
     if (!isOpen) return null;
-    console.log("locations: "+locations)
-
+    
     return (
         <div className="modal-overlay">
             <div className="modal">
@@ -172,10 +144,6 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
                     <div>
                         <label>First Name:</label>
                         <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
-                    </div>
-                    <div>
-                        <label>Middle Name:</label>
-                        <input type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
                     </div>
                     <div>
                         <label>Last Name:</label>
@@ -207,18 +175,27 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
                         </div>
                     }
                     <div>
-                        <label>Manager:</label>
-                        {
-                            (isManager || department?.name == "Manager") ?
-                            <select value={managerOfManagerId} onChange={(e) => changeManagerOfManager(e.target.value)} required>
-                                <option value={managerOfManagerId}>{managerOfManagerName || "None"}</option>
-                                {managersOfManagers.map(mom => (
-                                    <option key={mom.id} value={mom.id}>{mom.first_name} {mom.last_name}</option>
-                                ))}
-                            </select>
-                            :
-                            <input type="text" value={manager?.first_name + " " + manager?.last_name} disabled />
-                        }
+                        <div>
+                            <label>Filter Manager</label>
+                            <input 
+                                type='text'
+                                placeholder='Search for manager'
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                    <label>Manager:</label>
+                        <select value={managerId} onChange={(e) => setManagerId(e.target.value)} required>
+                            <option value={managerId}>{employees?.filter(emp => emp.id === managerId)[0]?.full_name || 'Select Manager'}</option>
+                            {/* {employees?.filter(emp => emp.id !== managerId).map(emp => (
+                                <option key={emp.id} value={emp.id}>{emp.full_name}</option>
+                            ))} */}
+                            {filteredEmployees.filter(emp => emp.id !== managerId).map(emp => {
+                                <option key={emp.id} value={emp.id}>
+                                    {emp.first_name+" "+emp.last_name}
+                                </option>
+                            })}
+                        </select>
                     </div>
                     <div>
                         <label>Location:</label>

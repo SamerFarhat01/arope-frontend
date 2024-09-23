@@ -7,7 +7,7 @@ import { Button } from '@mui/material';
 
 const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
 
-const EmployeeDetail = ({ departments, getEmployees, locations }) => {
+const EmployeeDetail = ({ departments, getEmployees, locations, employees}) => {
     const [employee, setEmployee] = useState({});
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -34,7 +34,7 @@ const EmployeeDetail = ({ departments, getEmployees, locations }) => {
     useEffect(() => {
         getEmployee();
     }, []);
-
+    console.log(employee)
     return (
         <div className="employee-detail">
             <h1 style={{ "marginBottom": "15px" }}>Employee Detail</h1>
@@ -43,10 +43,6 @@ const EmployeeDetail = ({ departments, getEmployees, locations }) => {
                     <tr>
                         <th>First Name</th>
                         <td>{employee.first_name}</td>
-                    </tr>
-                    <tr>
-                        <th>Middle Name</th>
-                        <td>{employee.middle_name}</td>
                     </tr>
                     <tr>
                         <th>Last Name</th>
@@ -62,11 +58,15 @@ const EmployeeDetail = ({ departments, getEmployees, locations }) => {
                     </tr>
                     <tr>
                         <th>Department</th>
-                        <td>{employee.department_name} {departments.filter(d => d.id === employee.department_id)[0]?.manager_id === employee.id ? "(Manager)" : ""}</td>
+                        <td>{employee.department_name}</td>
                     </tr>
                     <tr>
                         <th>Manager</th>
                         <td>{employee.manager_first_name ? `${employee.manager_first_name} ${employee.manager_last_name}` : "None"}</td>
+                    </tr>
+                    <tr>
+                        <th>First Approver</th>
+                        <td>{employee.first_approver_first_name ? `${employee.first_approver_first_name} ${employee.first_approver_last_name}` : "None"}</td>
                     </tr>
                     <tr>
                         <th>Location</th>
@@ -84,6 +84,7 @@ const EmployeeDetail = ({ departments, getEmployees, locations }) => {
                 departments={departments}
                 locations={locations}
                 getEmployees={getEmployees}
+                employees={employees}
                 isManager={departments.filter(d => d.id === employee.department_id)[0]?.manager_id === employee.id}
             />
         </div>

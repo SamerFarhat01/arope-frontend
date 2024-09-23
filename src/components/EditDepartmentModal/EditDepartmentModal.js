@@ -6,15 +6,11 @@ const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
 
 const EditDepartmentModal = ({ isOpen, onClose, department, onDepartmentUpdated, token }) => {
     const [name, setName] = useState('');
-    const [managerId, setManagerId] = useState('');
-    const [supervisorId, setSupervisorId] = useState(''); 
-    const [branchManagerId, setBranchManagerId] = useState(''); 
+
 
     useEffect(() => {
         if (department) {
             setName(department.name);
-            setManagerId(department.manager_id || '');
-            setSupervisorId(department.supervisor_id || '');
         }
     }, [department]);
 
@@ -38,11 +34,7 @@ const EditDepartmentModal = ({ isOpen, onClose, department, onDepartmentUpdated,
         e.preventDefault();
         try {
             const hrUser = getCookie('user_id'); // Retrieve the HR user ID from cookie
-            const updateData = { name, hrUser, supervisor_id: supervisorId == '' ? null : supervisorId };
-
-            if (managerId !== '') {
-                updateData.manager_id = managerId;
-            }
+            const updateData = { name, hrUser};
 
             await Axios.patch(`${baseUrl}/departments/${department.id}`, updateData, {
                 headers: { Authorization: `Bearer ${token}` }
@@ -61,7 +53,7 @@ const EditDepartmentModal = ({ isOpen, onClose, department, onDepartmentUpdated,
             <DialogTitle>Edit Department</DialogTitle>
             <DialogContent>
                 <DialogContentText>
-                    To edit this department, please change the name and manager ID below.
+                    To edit this department, please change the name
                 </DialogContentText>
                 <form onSubmit={handleSubmit}>
                     <TextField
@@ -72,22 +64,6 @@ const EditDepartmentModal = ({ isOpen, onClose, department, onDepartmentUpdated,
                         autoComplete="off"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Manager ID"
-                        fullWidth
-                        autoComplete="off"
-                        value={managerId}
-                        onChange={(e) => setManagerId(e.target.value)}
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Supervisor ID"
-                        fullWidth
-                        autoComplete="off"
-                        value={supervisorId}
-                        onChange={(e) => setSupervisorId(e.target.value)}
                     />
                     <DialogActions>
                         <Button onClick={onClose} color="primary">

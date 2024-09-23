@@ -12,8 +12,6 @@ const Departments = ({ token }) => {
     const [openAddDialog, setOpenAddDialog] = useState(false);
     const [openEditDialog, setOpenEditDialog] = useState(false);
     const [newDepartmentName, setNewDepartmentName] = useState('');
-    const [newManagerId, setNewManagerId] = useState(null);
-    const [supervisorId, setSupervisorId] = useState(null);
     const [selectedDepartment, setSelectedDepartment] = useState(null);
     const [error, setError] = useState('');
 
@@ -51,7 +49,7 @@ const Departments = ({ token }) => {
 
         try {
             const hrUser = getCookie('user_id'); // Retrieve the HR user ID from cookie
-            const response = await Axios.post(`${baseUrl}/departments`, { name: newDepartmentName, manager_id: newManagerId,supervisor_id: supervisorId, hrUser }, {
+            const response = await Axios.post(`${baseUrl}/departments`, { name: newDepartmentName, hrUser }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -60,8 +58,6 @@ const Departments = ({ token }) => {
             setDepartments([...departments, newDepartment]);
 
             setNewDepartmentName('');
-            setNewManagerId('');
-            setSupervisorId('');
             handleCloseAdd();
         } catch (error) {
             console.error('Error adding department:', error);
@@ -114,10 +110,6 @@ const Departments = ({ token }) => {
                     columns={[
                         { field: 'id', headerName: 'Department ID', flex: 0.5, align: 'center', headerAlign: 'center'},
                         { field: 'name', headerName: 'Department Name', flex: 1, align: 'center', headerAlign: 'center'},
-                        { field: 'manager_id', headerName: 'Manager ID', flex: 0.5, align: 'center', headerAlign: 'center'},
-                        { field: 'manager_full_name', headerName: 'Manager Name', flex: 1, align: 'center', headerAlign: 'center'},
-                        { field: 'supervisor_id', headerName: 'Supervisor ID', flex: 0.5, align: 'center', headerAlign: 'center'},
-                        { field: 'supervisor_full_name', headerName: 'Supervisor Name', flex: 1, align: 'center', headerAlign: 'center'},
                     ]}
                     pageSize={10}
                     onRowClick={handleRowClick}
@@ -143,22 +135,6 @@ const Departments = ({ token }) => {
                         }}
                         error={!!error}
                         helperText={error}
-                        autoComplete="off"
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Manager ID"
-                        fullWidth
-                        value={newManagerId}
-                        onChange={(e) => setNewManagerId(e.target.value)}
-                        autoComplete="off"
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Supervisor ID"
-                        fullWidth
-                        value={supervisorId}
-                        onChange={(e) => setSupervisorId(e.target.value)}
                         autoComplete="off"
                     />
                 </DialogContent>

@@ -172,6 +172,9 @@ function App() {
         }, 1000)
     };
 
+    console.log("dcndiciodi"+locations)
+    
+
     return (
         <Router>
             <div className="App">
@@ -200,7 +203,7 @@ function App() {
                             <Route
                                 path="/employee/:id"
                                 element={
-                                    <EmployeeDetail departments={departments} locations={locations} getEmployees={getEmployees} />
+                                    <EmployeeDetail employees={employees} departments={departments} locations={locations} getEmployees={getEmployees} />
                                 }
                             />
                             <Route

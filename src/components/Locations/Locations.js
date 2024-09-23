@@ -12,7 +12,6 @@ const Locations = ({ token }) => {
     const [openAddDialog, setOpenAddDialog] = useState(false);
     const [openEditDialog, setOpenEditDialog] = useState(false);
     const [newLocationName, setNewLocationName] = useState('');
-    const [newBranchManagerId, setNewBranchManagerId] = useState(null);
     const [selectedLocation, setSelectedLocation] = useState(null); // For holding the selected location for editing
     const [error, setError] = useState('');
 
@@ -49,7 +48,7 @@ const Locations = ({ token }) => {
         }
 
         try {
-            const response = await Axios.post(`${baseUrl}/location`, { location_name: newLocationName, branch_manager_id: newBranchManagerId }, {
+            const response = await Axios.post(`${baseUrl}/location`, { location_name: newLocationName}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -58,7 +57,6 @@ const Locations = ({ token }) => {
             setLocations([...locations, newLocation]);
 
             setNewLocationName('');
-            setNewBranchManagerId('');
             handleCloseAdd();
         } catch (error) {
             console.error('Error adding location:', error);
@@ -95,8 +93,6 @@ const Locations = ({ token }) => {
                     columns={[
                         { field: 'id', headerName: 'Location ID', flex: 0.5, align: 'center', headerAlign: 'center' },
                         { field: 'location_name', headerName: 'Location Name', flex: 0.5, align: 'center', headerAlign: 'center' },
-                        { field: 'branch_manager_id', headerName: 'Branch Manager ID', flex: 0.5, align: 'center', headerAlign: 'center' },
-                        { field: 'branch_manager_full_name', headerName: 'Branch Manager Name', flex: 0.5, align: 'center', headerAlign: 'center' },
                     ]}
                     pageSize={10}
                     autoHeight
@@ -108,7 +104,7 @@ const Locations = ({ token }) => {
                 <DialogTitle>Add New Location</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        To add a new location, please enter the location name and branch manager ID here.
+                        To add a new location, please enter the location name
                     </DialogContentText>
                     <TextField
                         autoFocus
@@ -122,14 +118,6 @@ const Locations = ({ token }) => {
                         }}
                         error={!!error}
                         helperText={error}
-                        autoComplete="off"
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Branch Manager ID"
-                        fullWidth
-                        value={newBranchManagerId}
-                        onChange={(e) => setNewBranchManagerId(e.target.value)}
                         autoComplete="off"
                     />
                 </DialogContent>
