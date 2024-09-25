@@ -32,22 +32,7 @@
 .leave-summary .leave-summary-table th {
     background-color: #f2f2f2;
 }
-/* 
-.leave-summary .sick-leave {
-    color: blue;
-    font-weight: bold;
-}
 
-.leave-summary .pto-leave {
-    color: green; 
-}
-
-.leave-summary .employee-info .pto-leave {
-    color: green; 
-}
-.leave-summary .other-leave {
-    color: rgb(244, 166, 98); 
-} */
 .employee-info{
     display: flex;
     justify-content: space-between;

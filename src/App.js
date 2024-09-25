@@ -172,7 +172,7 @@ function App() {
         }, 1000)
     };
 
-    console.log("dcndiciodi"+locations)
+    
     
 
     return (

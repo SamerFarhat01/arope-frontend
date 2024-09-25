@@ -18,8 +18,11 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
     const [location, setLocation] = useState(null);
     const [locationId, setLocationId] = useState(null);
     const [managerId, setManagerId] = useState(null);
-    const [searchTerm, setSearchTerm] = useState('')
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filteredManagers, setFilteredManagers] = useState([]);
     const [firstApproverId, setFirstApproverId] = useState(null);
+    const [searchTermFirstApprover, setSearchTermFirstApprover]=useState('')
+    const [filteredFirstApprovers, setFilteredFirstApprovers]=useState([])
     
 
     function getCookie(cname) {
@@ -54,7 +57,9 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
                 departmentId: departments.filter(d => d.name === employee.department_name)[0]?.id,
                 locationName: employee.location_name,
                 managerId: employee.manager_id,
-                firstApproverId: employee.first_approver_id
+                managerName:employee.manager_full_name,
+                firstApproverId: employee.first_approver_id,
+                firstApproverName: employee.first_approver_full_name
             };
 
             setInitialEmployeeData(initialData);
@@ -70,7 +75,9 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
             setLocation(initialData.locationName);
             setLocationId(locations?.filter(loc => loc.location_name == initialData.locationName)[0]?.id)
             setManagerId(initialData.managerId)
+            setSearchTerm(initialData.managerName || "None")
             setFirstApproverId(initialData.firstApproverId)
+            setSearchTermFirstApprover(initialData.firstApproverName || "None")
         }
     }, [employee, departments, locations]);
 
@@ -105,10 +112,47 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onEmployeeUpdated, depar
             console.error('Error updating employee:', error);
         }
     };
-const filteredEmployees = employees.filter(emp => 
-        emp.first_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        emp.last_name.toLowerCase().includes(searchTerm.toLowerCase()) 
-    )
+
+    const filterFirstApprovers = (e) => {
+        setSearchTermFirstApprover(e.target.value)
+        const filtered = employees.filter(emp => 
+            emp.first_name.toLowerCase().includes(e.target.value.toLowerCase()) || 
+            emp.last_name.toLowerCase().includes(e.target.value.toLowerCase())
+        )
+        setFilteredFirstApprovers(filtered)
+    }
+    const handleFirstApproverSelect = (approver) => {
+        if(approver===null){
+            setFirstApproverId(null)
+            setSearchTermFirstApprover("None")
+            setFilteredFirstApprovers([])
+        }else{
+            setFirstApproverId(approver.id)
+            setSearchTermFirstApprover(`${approver.first_name} ${approver.last_name}`)
+            setFilteredFirstApprovers([])
+        }
+    }
+
+    const filterManagers = (e) => {
+        setSearchTerm(e.target.value)
+        const filtered = employees.filter(emp => 
+            emp.first_name.toLowerCase().includes(e.target.value.toLowerCase()) || 
+            emp.last_name.toLowerCase().includes(e.target.value.toLowerCase())
+        )
+        setFilteredManagers(filtered)
+    }
+
+    const handleManagerSelect = (manager) => {
+        if(manager===null){
+            setManagerId(null)
+            setSearchTerm("None")
+            setFilteredManagers([])
+        }else{
+            setManagerId(manager.id)
+            setSearchTerm(`${manager.first_name} ${manager.last_name}`)
+            setFilteredManagers([])
+        }
+    }
 
     const handleClose = () => {
         setFirstName(initialEmployeeData.firstName);
@@ -175,29 +219,6 @@ const filteredEmployees = employees.filter(emp =>
                         </div>
                     }
                     <div>
-                        <div>
-                            <label>Filter Manager</label>
-                            <input 
-                                type='text'
-                                placeholder='Search for manager'
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                    <label>Manager:</label>
-                        <select value={managerId} onChange={(e) => setManagerId(e.target.value)} required>
-                            <option value={managerId}>{employees?.filter(emp => emp.id === managerId)[0]?.full_name || 'Select Manager'}</option>
-                            {/* {employees?.filter(emp => emp.id !== managerId).map(emp => (
-                                <option key={emp.id} value={emp.id}>{emp.full_name}</option>
-                            ))} */}
-                            {filteredEmployees.filter(emp => emp.id !== managerId).map(emp => {
-                                <option key={emp.id} value={emp.id}>
-                                    {emp.first_name+" "+emp.last_name}
-                                </option>
-                            })}
-                        </select>
-                    </div>
-                    <div>
                         <label>Location:</label>
                         <select value={locations?.filter(loc => loc.location_name == location)[0].id} onChange={(e) => changeLocation(e.target.value)} required>
                             <option value={locations?.filter(loc => loc.location_name == location)[0].id}>{location}</option>
@@ -205,6 +226,46 @@ const filteredEmployees = employees.filter(emp =>
                                 <option key={loc.id} value={loc.id}>{loc.location_name}</option>
                             ))}
                         </select>
+                    </div>
+                    <div>
+                        <label>Manager:</label>
+                        <input 
+                            type="text"
+                            placeholder='Seach Manager'
+                            className='dropdown-input'
+                            value={searchTerm}
+                            onChange={filterManagers}
+                        />
+                        {filteredManagers.length > 0 && (
+                            <ul className='dropdown-list'>
+                                <li onClick={()=>handleManagerSelect(null)}>None</li>
+                                {filteredManagers.map(manager => (
+                                    <li key={manager.id} onClick={() => handleManagerSelect(manager)}>
+                                        {manager.first_name} {manager.last_name}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                    <div>
+                        <label>First Approver:</label>
+                        <input 
+                            type="text"
+                            placeholder='Seach First Approver'
+                            className='dropdown-input'
+                            value={searchTermFirstApprover}
+                            onChange={filterFirstApprovers}
+                        />
+                        {filteredFirstApprovers.length > 0 && (
+                            <ul className='dropdown-list'>
+                                <li onClick={()=>handleFirstApproverSelect(null)}>None</li>
+                                {filteredFirstApprovers.map(approver => (
+                                    <li key={approver.id} onClick={() => handleFirstApproverSelect(approver)}>
+                                        {approver.first_name} {approver.last_name}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
                     <button type="submit">Save Changes</button>
                 </form>

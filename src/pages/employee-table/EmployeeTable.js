@@ -42,10 +42,10 @@ const EmployeeTable = ({ token, employees, getEmployees, deleteEmployee, departm
         { field: 'id', headerName: 'ID', width: 75, align: 'center', headerAlign: 'center' },
         { field: 'full_name', headerName: 'Name', width: 150, align: 'center', headerAlign: 'center' },
         { field: 'email', headerName: 'Email', width: 200, align: 'center', headerAlign: 'center' },
-        { field: 'department_name', headerName: 'Department', width: 150, align: 'center', headerAlign: 'center' },
+        { field: 'department_name', headerName: 'Department', width: 250, align: 'center', headerAlign: 'center' },
         { field: 'manager_full_name', headerName: 'Manager', width: 150, align: 'center', headerAlign: 'center' },
         { field: 'location_name', headerName: 'Location', width: 100, align: 'center', headerAlign: 'center' },
-        { field: 'first_approver_name', headerName: 'First Approval', width: 200, align: 'center', headerAlign: 'center' },
+        { field: 'first_approver_full_name', headerName: 'First Approval', width: 200, align: 'center', headerAlign: 'center' },
         // { field: 'leave_days_on_jan_1', headerName: 'Starting Balance', width: 150, align: 'center', headerAlign: 'center' },
         { field: 'days', headerName: 'Balance', width: 100, align: 'center', headerAlign: 'center' },
         { field: 'paid_leaves_taken', headerName: 'Paid Leave', width: 100, align: 'center', headerAlign: 'center' },
@@ -91,6 +91,7 @@ const EmployeeTable = ({ token, employees, getEmployees, deleteEmployee, departm
                     onEmployeeAdded={handleEmployeeAdded}
                     departments={departments}
                     locations={locations}
+                    employees={employees}
                     selectedEmployee={selectedEmployee}
                 />
             </div>
