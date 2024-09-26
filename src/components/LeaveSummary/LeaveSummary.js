@@ -3,36 +3,38 @@ import Axios from 'axios';
 import moment from 'moment';
 import './LeaveSummary.css';
 
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
+
 const LeaveSummary = ({ employeeId }) => {
     const [leaveSummary, setLeaveSummary] = useState([]);
     const [gridData, setGridData] = useState({});
     const [employeeInfo, setEmployeeInfo] = useState({});
     const [totals, setTotals] = useState({});
-    const [totalSickLeaves, setTotalSickLeaves] = useState(0);
+    const [totalSickLeavesWithMedicalReport, setTotalSickLeavesWithMedicalReport] = useState(0);
+    const [totalSickLeavesAllowed, setTotalSickLeavesAllowed] = useState(0);
+    const [totalUnpaidLeaves, setTotalUnpaidLeaves] = useState(0);
     const [totalPTO, setTotalPTO] = useState(0);
     const [daysToBeConsumedByJune30, setDaysToBeConsumedByJune30] = useState(0);
 
     useEffect(() => {
-        const fetchLeaveSummary = async () => {
-            try {
-                const response = await Axios.get(`http://localhost:5000/employee/${employeeId}/leave-summary`);
-                setLeaveSummary(response.data);
-            } catch (error) {
-                console.error('Error fetching leave summary:', error);
-            }
-        };
+        const fetchData = async () => {
+            try{
+                const [leaveSummaryResponse, employeeInfoResponse] = await Promise.all([
+                    Axios.get(`${baseUrl}/employee/${employeeId}/leave-summary`),
+                    Axios.get(`${baseUrl}/employee/${employeeId}`),
+                ]);
+                const leaveData = leaveSummaryResponse.data
+                const employeeData = employeeInfoResponse.data
 
-        const fetchEmployeeInfo = async () => {
-            try {
-                const response = await Axios.get(`http://localhost:5000/employee/${employeeId}`);
-                const employeeData = response.data;
-                setEmployeeInfo(employeeData);
+                setLeaveSummary(leaveData)
 
+                
                 // Calculate service years
                 const startMoment = moment(employeeData.start_date);
                 const currentMoment = moment();
                 const yearsOfService = currentMoment.diff(startMoment, 'years');
 
+                
                 // Calculate leave days per year based on service years and manager status
                 let leaveDaysPerYear = 15;
                 if (employeeData.is_manager) {
@@ -48,21 +50,42 @@ const LeaveSummary = ({ employeeId }) => {
                 if (daysToBeConsumed > 0) {
                     setDaysToBeConsumedByJune30(daysToBeConsumed);
                 }
-            } catch (error) {
-                console.error('Error fetching employee info:', error);
+
+                const totalDaysUsed = calculateDaysUsed(leaveData)
+
+                setEmployeeInfo({
+                    ...employeeData,
+                    daysUsed: totalDaysUsed
+                })
+            } catch(error){
+                console.error('Error fetching data:', error)
             }
-        };
+        }
+        fetchData()
+    }, [employeeId])
+    const calculateDaysUsed = (leaveSummaryData) => {
+        let totalDaysUsed = 0
 
-        fetchLeaveSummary();
-        fetchEmployeeInfo();
-    }, [employeeId]);
+        leaveSummaryData.forEach(leave => {
+            const leaveType = leave.leave_type;
+            let duration = Math.abs(parseFloat(leave.net_amount)) || 0;
+            
+            if (leaveType === 'Annual Paid Leave' || leave.request_status === 'HR Remove' || leaveType === 'Forced Leave') {
+                totalDaysUsed += duration;
+                
+            }
+        })
 
+        return totalDaysUsed
+    }
     useEffect(() => {
         const generateGridData = () => {
             const data = {};
             const monthTotals = {};
             let totalDaysUsed = 0;
-            let sickLeaveDays = 0;
+            let sickLeaveDaysWithMedicalReport = 0;
+            let sickLeaveDaysAllowed = 0;
+            let unpaidLeave = 0;
             let currentMonthPtoMinutes = 0;
             const currentMonth = new Date().getMonth();
 
@@ -96,31 +119,67 @@ const LeaveSummary = ({ employeeId }) => {
                     duration = `${ptoMinutes}min`;
                     data[month][day] = { duration, leaveType: 'Personal Time Off' };
                 } else {
-                    data[month][day] = { duration, leaveType };
-                    monthTotals[month] += duration;
 
-                    if (leaveType === 'Annual Paid Leave' || leaveType === 'Unpaid Leave' || leave.request_status === 'HR Remove') {
+                    
+                    if (leaveType === 'Annual Paid Leave' || leave.request_status === 'HR Remove' || leaveType === 'Forced Leave') {
+                        monthTotals[month] += duration;
                         totalDaysUsed += duration;
+                        
                     }
+                    
+                    if(leaveType === "Sick Leave Allowed"){
+                        duration = duration === 1 ? '1SLA' : '0.5SLA'
+                    }
+                    if(leaveType === "Sick Leave With Medical Report"){
+                        duration = duration === 1 ? '1SLR' : '0.5SLR'
+                    }
+                    if(leaveType === "Forced Leave"){
+                        duration = duration === 1 ? '1FL' : '0.5FL'
+                    }
+                    if(leaveType === 'Compassionate'){
+                        duration = 'CL'
+                    }
+                    if(leaveType === 'Marital'){
+                        duration = 'MRL'
+                    }
+                    if(leaveType === 'Maternity'){
+                        duration = 'MTL'
+                    }
+                    if(leaveType === 'Paternity'){
+                        duration = 'PTL'
+                    }
+                    if(leaveType === 'Unpaid Leave'){
+                        duration = duration === 1 ? '1UL' : '0.5UL'
+                    }
+                    data[month][day] = { duration, leaveType };
 
-                    if (leaveType.includes('Sick Leave')) {
-                        sickLeaveDays += duration;
+
+                    if (leaveType === 'Sick Leave With Medical Report') {
+                        sickLeaveDaysWithMedicalReport += duration === '1SLR' ? 1 : duration === '0.5SLR' ? 0.5 : duration;
+                    }
+                    if (leaveType === 'Sick Leave Allowed') {
+                        sickLeaveDaysAllowed += duration === '1SLA' ? 1 : duration === '0.5SLA' ? 0.5 : duration;
+                    }
+                    if (leaveType === 'Unpaid Leave') {
+                        unpaidLeave += duration === '1UL' ? 1 : duration === '0.5UL' ? 0.5 : duration;
                     }
                 }
             });
 
             setGridData(data);
             setTotals(monthTotals);
-            setTotalSickLeaves(sickLeaveDays);
+            setTotalSickLeavesWithMedicalReport(sickLeaveDaysWithMedicalReport);
+            setTotalSickLeavesAllowed(sickLeaveDaysAllowed);
+            setTotalUnpaidLeaves(unpaidLeave);
             setTotalPTO(currentMonthPtoMinutes);
             setEmployeeInfo(prev => {
                 const updatedInfo = { ...prev, daysUsed: totalDaysUsed };
-                return updatedInfo;
-            });
+                return updatedInfo
+            })
         };
 
-        generateGridData();
-    }, [leaveSummary]);
+        generateGridData()
+    }, [leaveSummary])
 
     const renderGrid = () => {
         const months = [
@@ -159,7 +218,7 @@ const LeaveSummary = ({ employeeId }) => {
 
                                             if (leaveType.includes('Sick Leave')) {
                                                 className = 'sick-leave';
-                                            } else if (['Condolences', 'Marital', 'Maternity', 'Paternity'].includes(leaveType)) {
+                                            } else if (['Compassionate', 'Marital', 'Maternity', 'Paternity'].includes(leaveType)) {
                                                 className = 'other-leave';
                                             } else if (leaveType === 'Personal Time Off') {
                                                 className = 'pto-leave';
@@ -188,20 +247,26 @@ const LeaveSummary = ({ employeeId }) => {
             </table>
         );
     };
-console.log("wjkdncnc:   "+leaveSummary.forEach(leave=>console.log(leave.leaveType)))
     return (
         <div className="leave-summary">
             <h2>Leave Summary</h2>
             <div className="employee-info">
-                <p><b>Name: </b>{employeeInfo.first_name} {employeeInfo.last_name}</p>
-                <p><b>Employee ID: </b>{employeeInfo.id}</p>
-                <p><b>Remaining Days: </b>{employeeInfo.days}</p>
-                <p><b>Days Used: </b>{employeeInfo.daysUsed}</p>
-                <p><b className="sick-leave">Sick Leaves: </b><span className="sick-leave">{totalSickLeaves}</span></p>
-                <p><b className="pto-leave">Personal Time Off: </b><span className="pto-leave">{totalPTO} minutes</span></p>
-                {daysToBeConsumedByJune30 > 0 && (
+                <div className='intro-left'>
+                    <p><b>Name: </b>{employeeInfo.first_name} {employeeInfo.last_name}</p>
+                    <p><b>Employee ID: </b>{employeeInfo.id}</p>
+                    {/* <p><b>Starting Balance: </b>{employeeInfo.leave_days_on_jan_1}</p> */}
+                    <p><b>Remaining Days: </b>{employeeInfo.days}</p>
+                    <p><b>Leaves Used: </b>{employeeInfo.daysUsed}</p>
+                    {daysToBeConsumedByJune30 > 0 && (
                     <p><b>Days to be consumed by June 30: </b>{daysToBeConsumedByJune30}</p>
-                )}
+                    )}
+                </div>
+                <div className='into-right'>
+                    <p><b className="sick-leave">Sick Leaves With Medical Report (SLR): </b><span className="sick-leave">{totalSickLeavesWithMedicalReport}</span></p>
+                    <p><b className="sick-leave">Sick Leaves Allowed (SLA): </b><span className="sick-leave">{totalSickLeavesAllowed}</span></p>
+                    <p><b className="unpaid-leave">Unpaid Leaves (UL): </b><span className="unpaid-leave">{totalUnpaidLeaves}</span></p>
+                    <p><b className="pto-leave">Personal Time Off: </b><span className="pto-leave">{totalPTO} minutes</span></p>
+                </div>
             </div>
             {renderGrid()}
         </div>

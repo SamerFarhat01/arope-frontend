@@ -7,6 +7,8 @@ import { format } from 'date-fns';
 import CloseIcon from '@mui/icons-material/Close';
 import './HolidayForm.css';
 
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
+
 const HolidayForm = ({ token }) => {
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
@@ -24,7 +26,7 @@ const HolidayForm = ({ token }) => {
 
     const fetchHolidays = async () => {
         try {
-            const response = await Axios.get('http://localhost:5000/holidays', {
+            const response = await Axios.get(`${baseUrl}/holidays`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setHolidays(response.data);
@@ -47,12 +49,12 @@ const HolidayForm = ({ token }) => {
         try {
             let response;
             if (buttonText === 'UPDATE HOLIDAY' && editMode) {  // Using editHolidayId instead of description
-                response = await Axios.patch(`http://localhost:5000/holidays/${editHolidayId}`, holidayData, {
+                response = await Axios.patch(`${baseUrl}/holidays/${editHolidayId}`, holidayData, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 console.log("PATCH request sent with ID:", editHolidayId);
             } else if (addMode && buttonText === 'ADD HOLIDAY') {
-                response = await Axios.post('http://localhost:5000/holiday', holidayData, {
+                response = await Axios.post(`${baseUrl}/holiday`, holidayData, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
             }

@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Button } from '@mui/material';
 import Axios from 'axios';
 
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
+
 const EditLocationModal = ({ isOpen, onClose, location, onLocationUpdated, token }) => {
     const [locationName, setLocationName] = useState('');
-    const [branchManagerId, setBranchManagerId] = useState('');
 
     useEffect(() => {
         if (location) {
             setLocationName(location.location_name);
-            setBranchManagerId(location.branch_manager_id || '');
         }
     }, [location]);
 
@@ -33,9 +33,9 @@ const EditLocationModal = ({ isOpen, onClose, location, onLocationUpdated, token
         e.preventDefault();
         try {
             const hrUser = getCookie('user_id'); // Retrieve the HR user ID from cookie
-            const updateData = { location_name: locationName, branch_manager_id: branchManagerId === '' ? null : branchManagerId, hrUser };
+            const updateData = { location_name: locationName, hrUser };
 
-            await Axios.patch(`http://localhost:5000/locations/${location.id}`, updateData, {
+            await Axios.patch(`${baseUrl}/locations/${location.id}`, updateData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             onLocationUpdated();
@@ -52,7 +52,7 @@ const EditLocationModal = ({ isOpen, onClose, location, onLocationUpdated, token
             <DialogTitle>Edit Location</DialogTitle>
             <DialogContent>
                 <DialogContentText>
-                    To edit this location, please change the name and branch manager ID below.
+                    To edit this location, please change the name
                 </DialogContentText>
                 <form onSubmit={handleSubmit}>
                     <TextField
@@ -63,14 +63,6 @@ const EditLocationModal = ({ isOpen, onClose, location, onLocationUpdated, token
                         autoComplete="off"
                         value={locationName}
                         onChange={(e) => setLocationName(e.target.value)}
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Branch Manager ID"
-                        fullWidth
-                        autoComplete="off"
-                        value={branchManagerId}
-                        onChange={(e) => setBranchManagerId(e.target.value)}
                     />
                     <DialogActions>
                         <Button onClick={onClose} color="primary">

@@ -6,6 +6,8 @@ import { IconButton, Menu, MenuItem } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import './LeaveRequestsTable.css';
 
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
+
 const LeaveRequestsTable = ({ token, userId, employees, departments }) => {
     const [leaveRequests, setLeaveRequests] = useState([]);
     const [employee, setEmployee] = useState({});
@@ -16,7 +18,7 @@ const LeaveRequestsTable = ({ token, userId, employees, departments }) => {
     useEffect(() => {
         const fetchLeaveRequests = async () => {
             try {
-                const response = await Axios.get(`http://localhost:5000/leave-requests/${userId}`, {
+                const response = await Axios.get(`${baseUrl}/leave-requests/${userId}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const formattedRequests = response.data.map(request => {
@@ -52,6 +54,7 @@ const LeaveRequestsTable = ({ token, userId, employees, departments }) => {
                             second: 'numeric',
                             hour12: true,
                         }),
+                        attachment: request.attachment,
                     };
                 });
     
@@ -64,7 +67,7 @@ const LeaveRequestsTable = ({ token, userId, employees, departments }) => {
 
         const fetchEmployee = async () => {
             try {
-                const response = await Axios.get(`http://localhost:5000/employee/${userId}`, {
+                const response = await Axios.get(`${baseUrl}/employee/${userId}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setEmployee(response.data);
@@ -102,7 +105,7 @@ const LeaveRequestsTable = ({ token, userId, employees, departments }) => {
 
     const handleCancelRequest = async () => {
         try {
-            await Axios.patch(`http://localhost:5000/leave-requests/${selectedRequestId}/cancel`, {}, {
+            await Axios.patch(`${baseUrl}/leave-requests/${selectedRequestId}/cancel`, {}, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setLeaveRequests(leaveRequests.map(req => 
@@ -117,16 +120,34 @@ const LeaveRequestsTable = ({ token, userId, employees, departments }) => {
     };
 
     const columns = [
-        { field: 'typeOfLeave', headerName: 'Type of Leave', width: 150 },
-        { field: 'requestStatus', headerName: 'Request Status', width: 150 },
-        { field: 'quantity', headerName: 'Quantity', width: 100 },
-        { field: 'dates', headerName: 'Dates', width: 300 },
-        { field: 'time', headerName: 'Time', width: 200 }, // Add this column
-        { field: 'lastModified', headerName: 'Last Modified', width: 200 },
+        { field: 'typeOfLeave', headerName: 'Type of Leave', flex: 1 },
+        { field: 'requestStatus', headerName: 'Request Status', flex: 1 },
+        { field: 'quantity', headerName: 'Quantity', flex: 0.5 },
+        { field: 'dates', headerName: 'Dates', flex: 1.5 },
+        { field: 'time', headerName: 'Time', flex: 1 }, 
+        {
+            field: 'attachment',
+            headerName: 'Attachment',
+            width:100,
+            renderCell: (params) => (
+                params.row.attachment ? (
+                    <a 
+                        href={`${baseUrl}/uploads/${params.row.attachment}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Download
+                    </a>
+                ) : (
+                    <span></span>
+                )
+            )
+        },
+        { field: 'lastModified', headerName: 'Last Modified', flex: 1.5 },
         {
             field: 'actions',
             headerName: '',
-            width: 100,
+            flex: 0.5,
             renderCell: (params) => (
                 <>
                     {(params.row.requestStatus === 'Pending First Approval' || params.row.requestStatus === 'Pending Manager' || params.row.requestStatus === 'Approved') && (
@@ -153,7 +174,7 @@ const LeaveRequestsTable = ({ token, userId, employees, departments }) => {
     return (
         <div className="leave-requests-container">
             <h1 className="title">Leave Requests</h1>
-            <div className="employee-info">
+            <div className="employeee-info">
                 <p><b>Employee ID:</b> {employee.id}</p>
                 <p><b>Name:</b> {employee.first_name} {employee.last_name}</p>
                 <p><b>Remaining Days:</b> {employee.days}</p>

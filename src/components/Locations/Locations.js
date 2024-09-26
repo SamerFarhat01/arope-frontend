@@ -5,19 +5,20 @@ import { DataGrid } from '@mui/x-data-grid';
 import './Locations.css';
 import EditLocationModal from '../EditLocationModal/EditLocationModal';
 
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
+
 const Locations = ({ token }) => {
     const [locations, setLocations] = useState([]);
     const [openAddDialog, setOpenAddDialog] = useState(false);
     const [openEditDialog, setOpenEditDialog] = useState(false);
     const [newLocationName, setNewLocationName] = useState('');
-    const [newBranchManagerId, setNewBranchManagerId] = useState(null);
     const [selectedLocation, setSelectedLocation] = useState(null); // For holding the selected location for editing
     const [error, setError] = useState('');
 
     useEffect(() => {
         const fetchLocations = async () => {
             try {
-                const response = await Axios.get('http://localhost:5000/location', {
+                const response = await Axios.get(`${baseUrl}/location`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setLocations(response.data);
@@ -47,7 +48,7 @@ const Locations = ({ token }) => {
         }
 
         try {
-            const response = await Axios.post('http://localhost:5000/location', { location_name: newLocationName, branch_manager_id: newBranchManagerId }, {
+            const response = await Axios.post(`${baseUrl}/location`, { location_name: newLocationName}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -56,7 +57,6 @@ const Locations = ({ token }) => {
             setLocations([...locations, newLocation]);
 
             setNewLocationName('');
-            setNewBranchManagerId('');
             handleCloseAdd();
         } catch (error) {
             console.error('Error adding location:', error);
@@ -70,7 +70,7 @@ const Locations = ({ token }) => {
 
     const handleLocationUpdated = async () => {
         try {
-            const response = await Axios.get('http://localhost:5000/location', {
+            const response = await Axios.get(`${baseUrl}/location`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setLocations(response.data);
@@ -91,9 +91,8 @@ const Locations = ({ token }) => {
                 <DataGrid
                     rows={locations}
                     columns={[
-                        { field: 'id', headerName: 'Location ID', width: 300 },
-                        { field: 'location_name', headerName: 'Location Name', width: 300 },
-                        { field: 'branch_manager_id', headerName: 'Branch Manager ID', width: 300 },
+                        { field: 'id', headerName: 'Location ID', flex: 0.5, align: 'center', headerAlign: 'center' },
+                        { field: 'location_name', headerName: 'Location Name', flex: 0.5, align: 'center', headerAlign: 'center' },
                     ]}
                     pageSize={10}
                     autoHeight
@@ -105,7 +104,7 @@ const Locations = ({ token }) => {
                 <DialogTitle>Add New Location</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        To add a new location, please enter the location name and branch manager ID here.
+                        To add a new location, please enter the location name
                     </DialogContentText>
                     <TextField
                         autoFocus
@@ -119,14 +118,6 @@ const Locations = ({ token }) => {
                         }}
                         error={!!error}
                         helperText={error}
-                        autoComplete="off"
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Branch Manager ID"
-                        fullWidth
-                        value={newBranchManagerId}
-                        onChange={(e) => setNewBranchManagerId(e.target.value)}
                         autoComplete="off"
                     />
                 </DialogContent>

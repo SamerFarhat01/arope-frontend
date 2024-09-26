@@ -33,17 +33,7 @@
     background-color: #f2f2f2;
 }
 
-.leave-summary .sick-leave {
-    color: blue;
-}
-
-.leave-summary .pto-leave {
-    color: green; /* or any color you prefer */
-}
-
-.leave-summary .employee-info .pto-leave {
-    color: green; /* or any color you prefer */
-}
-.leave-summary .other-leave {
-    color: rgb(244, 166, 98); /* or any color you prefer */
+.employee-info{
+    display: flex;
+    justify-content: space-between;
 }

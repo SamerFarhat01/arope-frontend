@@ -5,6 +5,8 @@ import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './SharedCalendar.css';
 
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
+
 const localizer = momentLocalizer(moment);
 
 const SharedCalendar = ({ token, onClose }) => {
@@ -12,10 +14,23 @@ const SharedCalendar = ({ token, onClose }) => {
     const [calendarOverlay, setCalendarOverlay] = useState(false);
     const [calendarOverlayEvents, setCalendarOverlayEvents] = useState([]);
 
+    const leaveTypeAbbreviations = {
+        'Annual Paid Leave': 'AL',
+        'Sick Leave Allowed': 'SLA',
+        'Sick Leave With Medical Report': 'SLR',
+        'Unpaid Leave': 'UL',
+        'Maternity': 'MTL',
+        'Paternity': 'PTL',
+        'Marital': 'MRL',
+        'Compassionate': 'CL',
+        'Forced Leave': 'FL',
+        'Personal Time Off': 'PTO',
+    }
+
     useEffect(() => {
         const fetchDepartmentLeaves = async () => {
             try {
-                const response = await Axios.get('http://localhost:5000/department-leaves', {
+                const response = await Axios.get(`${baseUrl}/department-leaves`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
@@ -27,11 +42,12 @@ const SharedCalendar = ({ token, onClose }) => {
                 const leaves = filteredLeaves.flatMap(leave => {
                     const leaveDates = leave.leave_date.split(','); // Assuming leave.leave_date is a comma-separated string of dates
                     return leaveDates.map(date => {
-                        let title = `${leave.employee_name} - ${leave.type_of_leave}`;
+                        const leaveType = leaveTypeAbbreviations[leave.type_of_leave] || leave.type_of_leave
+                        let title = `${leave.employee_name}-${leaveType}`;
                         if (leave.duration == 0.5) {
-                            title += ` (${leave.time === 'AM' ? 'Morning' : 'Afternoon'})`;
+                            title += ` (${leave.time === 'AM' ? 'AM' : 'PM'})`;
                         } else {
-                            title += ` (Full Day)`;
+                            title += `(1)`;
                         }
 
                         return {
@@ -89,19 +105,41 @@ const SharedCalendar = ({ token, onClose }) => {
     };
 
     return (
-        <div style={{ height: '500px', width: '100%', margin: '0 auto', position: 'relative', padding: '15px'  }}>
+        <div style={{ height: 'calc(100vh - 200px)', width: '100%', margin: '0 auto', position: 'relative', padding: '15px'  }}>
             <button className="close-button" onClick={onClose}>X</button>
-            <Calendar
-                localizer={localizer}
-                events={events}
-                startAccessor="date"
-                endAccessor="date"
-                onSelectEvent={e => console.log(e)}
-                views={['month', 'agenda']}
-                style={{ height: '500px', width: '100%' }}
-                eventPropGetter={eventStyleGetter}
-                onShowMore={(events, date) => handleCalendarOverlay(events, date)}
-            />
+            <div className='calendar-with-legend'>
+                <div className='calendar-container'>
+                    <Calendar
+                        localizer={localizer}
+                        events={events}
+                        startAccessor="date"
+                        endAccessor="date"
+                        onSelectEvent={e => console.log(e)}
+                        views={['month', 'agenda']}
+                        style={{ height: 'calc(100vh - 200px)', width: '100%' }}
+                        eventPropGetter={eventStyleGetter}
+                        onShowMore={(events, date) => handleCalendarOverlay(events, date)}
+                    />
+                </div>
+                <div className='legend'>
+                    <h4>Legend</h4>
+                    <ul>
+                        <li className='legend-list-items'>AL: Annual Paid Leave</li>
+                        <li className='legend-list-items'>SLA: Sick Leave Allowed</li>
+                        <li className='legend-list-items'>SLR: Sick Leave With Medical Report</li>
+                        <li className='legend-list-items'>PTO: Personal Time Off</li>
+                        <li className='legend-list-items'>UL: Unpaid Leave</li>
+                        <li className='legend-list-items'>MTL: Maternity Leave</li>
+                        <li className='legend-list-items'>PTL: Paternity Leave</li>
+                        <li className='legend-list-items'>MRL: Marital Leave</li>
+                        <li className='legend-list-items'>CL: Compassionate Leave</li>
+                        <li className='legend-list-items'>FL: Forced Leave</li>
+                        <li className='legend-list-items'>(1): Full Day</li>
+                        <li className='legend-list-items'>(AM): Half-Day Morning</li>
+                        <li className='legend-list-items'>(PM): Half-Day Afternoon</li>
+                    </ul>
+                </div>
+            </div>
             {calendarOverlay && (
                 <div id="calendar-overlay">
                     <ul className='calendar-overlay__list'>

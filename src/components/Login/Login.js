@@ -5,6 +5,8 @@ import videoFile from '../../assets/anim_logo_eng_arb_1-1835582063.mp4';
 import logo from '../../assets/arope_logoo.png';
 import loginBgVideo from '../../assets/login-bg-video.mp4';
 
+const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
+
 const Login = ({ onLoginSuccess }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -13,7 +15,7 @@ const Login = ({ onLoginSuccess }) => {
     const [isInitialLogin, setIsInitialLogin] = useState(null);
 
     const checkIfInitialLogin = async () => {
-        const res = await Axios.get(`http://localhost:5000/initial/login/${email}`);
+        const res = await Axios.get(`${baseUrl}/initial/login/${email}`);
         var { email_exists, password_is_null } = res.data;
         console.log("Check if initial login:", res.data);
         if (!email_exists) {
@@ -34,7 +36,7 @@ const Login = ({ onLoginSuccess }) => {
         if (email) {
             const handler = setTimeout(() => {
                 checkIfInitialLogin();
-            }, 2600);
+            }, 1600);
 
             return () => {
                 clearTimeout(handler);
@@ -51,7 +53,7 @@ const Login = ({ onLoginSuccess }) => {
                     password: password,
                     isInitialLogin: isInitialLogin
                 }
-                const res = await Axios.post('http://localhost:5000/login', req);
+                const res = await Axios.post(`${baseUrl}/login`, req);
                 setError('');
                 console.log('Login response:', res.data); // Debugging line
                 const { token, department, firstName, lastName, isHr, isManager } = res.data;

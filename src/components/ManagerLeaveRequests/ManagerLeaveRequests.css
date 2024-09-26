@@ -3,11 +3,14 @@
 .leave-requests-container {
     position: relative;
     padding: 20px;
-    
+    height: calc(100vh - 150px);
+    box-sizing: border-box;
 }
 
 .data-grid-container {
     margin-top: 20px;
+    height: calc(100% - 120px);
+
 }
 
 .MuiDataGrid-root {
